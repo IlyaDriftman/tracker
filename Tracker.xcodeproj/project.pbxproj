@@ -7,26 +7,26 @@
 	objects = {
 
 /* Begin PBXFileReference section */
-		C01D30832E86E2D800BBF364 /* Tracker1.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Tracker1.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		C01D30832E86E2D800BBF364 /* Tracker.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Tracker.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
-		C01D30952E86E2D900BBF364 /* Exceptions for "Tracker1" folder in "Tracker1" target */ = {
+		C01D30952E86E2D900BBF364 /* Exceptions for "Tracker" folder in "Tracker" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				Info.plist,
 			);
-			target = C01D30822E86E2D800BBF364 /* Tracker1 */;
+			target = C01D30822E86E2D800BBF364 /* Tracker */;
 		};
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
-		C01D30852E86E2D800BBF364 /* Tracker1 */ = {
+		C01D30852E86E2D800BBF364 /* Tracker */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
-				C01D30952E86E2D900BBF364 /* Exceptions for "Tracker1" folder in "Tracker1" target */,
+				C01D30952E86E2D900BBF364 /* Exceptions for "Tracker" folder in "Tracker" target */,
 			);
-			path = Tracker1;
+			path = Tracker;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
@@ -45,7 +45,7 @@
 		C01D307A2E86E2D800BBF364 = {
 			isa = PBXGroup;
 			children = (
-				C01D30852E86E2D800BBF364 /* Tracker1 */,
+				C01D30852E86E2D800BBF364 /* Tracker */,
 				C01D30842E86E2D800BBF364 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -53,7 +53,7 @@
 		C01D30842E86E2D800BBF364 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				C01D30832E86E2D800BBF364 /* Tracker1.app */,
+				C01D30832E86E2D800BBF364 /* Tracker.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -61,9 +61,9 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		C01D30822E86E2D800BBF364 /* Tracker1 */ = {
+		C01D30822E86E2D800BBF364 /* Tracker */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = C01D30962E86E2D900BBF364 /* Build configuration list for PBXNativeTarget "Tracker1" */;
+			buildConfigurationList = C01D30962E86E2D900BBF364 /* Build configuration list for PBXNativeTarget "Tracker" */;
 			buildPhases = (
 				C01D307F2E86E2D800BBF364 /* Sources */,
 				C01D30802E86E2D800BBF364 /* Frameworks */,
@@ -74,13 +74,13 @@
 			dependencies = (
 			);
 			fileSystemSynchronizedGroups = (
-				C01D30852E86E2D800BBF364 /* Tracker1 */,
+				C01D30852E86E2D800BBF364 /* Tracker */,
 			);
-			name = Tracker1;
+			name = Tracker;
 			packageProductDependencies = (
 			);
 			productName = Tracker1;
-			productReference = C01D30832E86E2D800BBF364 /* Tracker1.app */;
+			productReference = C01D30832E86E2D800BBF364 /* Tracker.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
@@ -98,7 +98,7 @@
 					};
 				};
 			};
-			buildConfigurationList = C01D307E2E86E2D800BBF364 /* Build configuration list for PBXProject "Tracker1" */;
+			buildConfigurationList = C01D307E2E86E2D800BBF364 /* Build configuration list for PBXProject "Tracker" */;
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
@@ -112,7 +112,7 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				C01D30822E86E2D800BBF364 /* Tracker1 */,
+				C01D30822E86E2D800BBF364 /* Tracker */,
 			);
 		};
 /* End PBXProject section */
@@ -316,7 +316,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		C01D307E2E86E2D800BBF364 /* Build configuration list for PBXProject "Tracker1" */ = {
+		C01D307E2E86E2D800BBF364 /* Build configuration list for PBXProject "Tracker" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				C01D30992E86E2D900BBF364 /* Debug */,
@@ -325,7 +325,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		C01D30962E86E2D900BBF364 /* Build configuration list for PBXNativeTarget "Tracker1" */ = {
+		C01D30962E86E2D900BBF364 /* Build configuration list for PBXNativeTarget "Tracker" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				C01D30972E86E2D900BBF364 /* Debug */,
