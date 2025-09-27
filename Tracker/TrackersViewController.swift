@@ -10,7 +10,6 @@ class TrackersViewController: UIViewController {
     private let dateLabel = UILabel()
     private var dateButton = UIButton()
     private let plusImage = UIImage(named: "plus")
-    
 
     // MARK: - Properties
     private var datePicker: UIDatePicker?
@@ -35,16 +34,27 @@ class TrackersViewController: UIViewController {
         return collectionView
     }()
 
-    
     private var trackers: [Tracker] = []
     private var visibleCategories: [TrackerCategory] = []
     private var categories: [TrackerCategory] = []
     private var completedTrackers: [TrackerRecord] = []
+    private var currentDate: Date
+
+    // MARK: - Initialization
+    override init(nibName nibNameOrNil: String?, bundle nibBundleOrNil: Bundle?)
+    {
+        currentDate = Date()
+        super.init(nibName: nibNameOrNil, bundle: nibBundleOrNil)
+    }
+
+    required init?(coder: NSCoder) {
+        currentDate = Date()
+        super.init(coder: coder)
+    }
 
     // MARK: - Lifecycle
     override func viewDidLoad() {
         super.viewDidLoad()
-
         setupUI()
         setupTestData()
         reloadData()
@@ -63,12 +73,12 @@ class TrackersViewController: UIViewController {
     }
 
     private func applyDateFilter() {
-        guard let datePicker = datePicker else { return }
+
         let filterText = (searchBar.text ?? "").lowercased()
         let calendar = Calendar.current
         let weekdayFromCalendar = calendar.component(
             .weekday,
-            from: datePicker.date
+            from: currentDate
         )
 
         // Преобразуем из календарного формата (1=воскресенье) в наш формат (1=понедельник)
@@ -102,6 +112,7 @@ class TrackersViewController: UIViewController {
     }
 
     @objc private func dateChanged() {
+        currentDate = datePicker?.date ?? Date()
         applyDateFilter()
     }
 
@@ -148,8 +159,7 @@ class TrackersViewController: UIViewController {
 
         setupConstraints()
     }
-    
-    
+
     private func setupNavigationBar() {
         // Date picker
         let datePicker = UIDatePicker()
@@ -161,31 +171,30 @@ class TrackersViewController: UIViewController {
             action: #selector(dateChanged),
             for: .valueChanged
         )
-        
-    
-        
+
         // Plus button
         let plusButton = UIButton(type: .custom)
         plusButton.setImage(plusImage, for: .normal)
         plusButton.tintColor = .label
-       
+
         plusButton.addTarget(
             self,
             action: #selector(plusButtonTapped),
             for: .touchUpInside
         )
         //plusButton.frame = CGRect(x: 0, y: 0, width: 42, height: 42)
-        
 
         // Add to navigation bar
-        navigationItem.leftBarButtonItem = UIBarButtonItem(customView: plusButton)
-        navigationItem.rightBarButtonItem = UIBarButtonItem(customView: datePicker)
-            
-            self.datePicker = datePicker
+        navigationItem.leftBarButtonItem = UIBarButtonItem(
+            customView: plusButton
+        )
+        navigationItem.rightBarButtonItem = UIBarButtonItem(
+            customView: datePicker
+        )
+
+        self.datePicker = datePicker
 
     }
-    
-   
 
     private func setupSearchBar() {
         searchBar.translatesAutoresizingMaskIntoConstraints = false
@@ -257,8 +266,14 @@ class TrackersViewController: UIViewController {
                 equalTo: titleLabel.bottomAnchor,
                 constant: 0
             ),
-            searchBar.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 8),
-            searchBar.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -8),
+            searchBar.leadingAnchor.constraint(
+                equalTo: view.leadingAnchor,
+                constant: 8
+            ),
+            searchBar.trailingAnchor.constraint(
+                equalTo: view.trailingAnchor,
+                constant: -8
+            ),
 
             // Content View
             contentView.topAnchor.constraint(equalTo: searchBar.bottomAnchor),
@@ -316,19 +331,20 @@ class TrackersViewController: UIViewController {
             schedule: .custom([.mon, .wed])
         )
 
-            trackers = [tracker1, tracker2, tracker3]
+        trackers = [tracker1, tracker2, tracker3]
 
         // Создаем тестовые категории
         let habitCategory = TrackerCategory(
-            title: "Домашние дела",
+            title: "Важно",
             trackers: [tracker1]
         )
         let eventCategory = TrackerCategory(
-            title: "Важные дела",
+            title: "После работы",
             trackers: [tracker2, tracker3]
         )
 
         categories = [habitCategory, eventCategory]
+
         // Обновляем коллекцию
         collectionView.reloadData()
         updatePlaceholderVisibility()
@@ -379,63 +395,88 @@ extension TrackersViewController: UICollectionViewDataSource {
         let completedDays = completedTrackers.filter {
             $0.trackerId == tracker.id
         }.count
-        cell.configure(with: tracker, category: category.title, onPlusTapped: { [weak self] in
-            self?.handleTrackerPlusTapped()
-        }, isCompletedToday: isCompletedToday, completedDays: completedDays, indexPath: indexPath)
+        cell.configure(
+            with: tracker,
+            category: category.title,
+            onPlusTapped: { [weak self] in
+                self?.handleTrackerPlusTapped()
+            },
+            isCompletedToday: isCompletedToday,
+            completedDays: completedDays,
+            indexPath: indexPath
+        )
 
         return cell
     }
-    
+
     private func isTrackerCompletedToday(id: UUID) -> Bool {
-        
+
         return completedTrackers.contains { TrackerRecord in
             isSameTrackerRecord(trackerRecord: TrackerRecord, id: id)
         }
     }
-    private func isSameTrackerRecord(trackerRecord: TrackerRecord, id: UUID) -> Bool {
-        guard let datePicker = datePicker else {return false}
-        let isSameDay = Calendar.current.isDate(trackerRecord.date, inSameDayAs: datePicker.date)
+    private func isSameTrackerRecord(trackerRecord: TrackerRecord, id: UUID)
+        -> Bool
+    {
+        let isSameDay = Calendar.current.isDate(
+            trackerRecord.date,
+            inSameDayAs: currentDate
+        )
         return trackerRecord.trackerId == id && isSameDay
     }
-    
+
 }
-extension TrackersViewController: trackerCellDelegate {
-    
+extension TrackersViewController: TrackerCellDelegate {
+
     func completetracker(id: UUID, at indexPath: IndexPath) {
-        guard let datePicker = datePicker else { return }
-        
         // Проверяем, что дата не в будущем
         let today = Date()
         let calendar = Calendar.current
-        if calendar.isDate(datePicker.date, inSameDayAs: today) || datePicker.date < today {
-            let trackerRecord = TrackerRecord(trackerId: id, date: datePicker.date)
+        if calendar.isDate(currentDate, inSameDayAs: today)
+            || currentDate < today
+        {
+            let trackerRecord = TrackerRecord(trackerId: id, date: currentDate)
             completedTrackers.append(trackerRecord)
-            
+
             // Обновляем только иконку кнопки без перезагрузки ячейки
-            if let cell = collectionView.cellForItem(at: indexPath) as? TrackerCell {
+            if let cell = collectionView.cellForItem(at: indexPath)
+                as? TrackerCell
+            {
                 let isCompletedToday = isTrackerCompletedToday(id: id)
-                let completedDays = completedTrackers.filter { $0.trackerId == id }.count
-                cell.updateButtonState(isCompletedToday: isCompletedToday, completedDays: completedDays)
+                let completedDays = completedTrackers.filter {
+                    $0.trackerId == id
+                }.count
+                cell.updateButtonState(
+                    isCompletedToday: isCompletedToday,
+                    completedDays: completedDays
+                )
             }
         }
     }
-    
+
     func uncompleteTracker(id: UUID, at indexPath: IndexPath) {
-        guard let datePicker = datePicker else { return }
-        
         // Проверяем, что дата не в будущем
         let today = Date()
         let calendar = Calendar.current
-        if calendar.isDate(datePicker.date, inSameDayAs: today) || datePicker.date < today {
+        if calendar.isDate(currentDate, inSameDayAs: today)
+            || currentDate < today
+        {
             completedTrackers.removeAll { TrackerRecord in
                 isSameTrackerRecord(trackerRecord: TrackerRecord, id: id)
             }
-            
+
             // Обновляем только иконку кнопки без перезагрузки ячейки
-            if let cell = collectionView.cellForItem(at: indexPath) as? TrackerCell {
+            if let cell = collectionView.cellForItem(at: indexPath)
+                as? TrackerCell
+            {
                 let isCompletedToday = isTrackerCompletedToday(id: id)
-                let completedDays = completedTrackers.filter { $0.trackerId == id }.count
-                cell.updateButtonState(isCompletedToday: isCompletedToday, completedDays: completedDays)
+                let completedDays = completedTrackers.filter {
+                    $0.trackerId == id
+                }.count
+                cell.updateButtonState(
+                    isCompletedToday: isCompletedToday,
+                    completedDays: completedDays
+                )
             }
         }
     }
@@ -488,10 +529,20 @@ extension TrackersViewController:
         if let categoryIndex = categories.firstIndex(where: {
             $0.title == category.title
         }) {
-            // Добавляем трекер в основную категорию
-            categories[categoryIndex].trackers.append(tracker)
-            
-            // Применяем фильтр для обновления visibleCategories
+            var oldCategory = categories[categoryIndex]
+
+            // создаём новый массив трекеров
+            let updatedTrackers = oldCategory.trackers + [tracker]
+
+            // создаём новый объект категории
+            let updatedCategory = TrackerCategory(
+                title: oldCategory.title,
+                trackers: updatedTrackers
+            )
+
+            // заменяем в массиве категорий
+            categories[categoryIndex] = updatedCategory
+
             applyDateFilter()
         }
     }

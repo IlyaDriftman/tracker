@@ -1,6 +1,6 @@
 import UIKit
 
-class EmojiColorCell: UICollectionViewCell {
+final class EmojiColorCell: UICollectionViewCell {
     private let emojiLabel = UILabel()
     private let colorView = UIView()
     private let selectionView = UIView()

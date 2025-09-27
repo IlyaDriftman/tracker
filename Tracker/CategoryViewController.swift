@@ -4,7 +4,7 @@ protocol CategoryViewControllerDelegate: AnyObject {
     func didSelectCategory(_ category: TrackerCategory)
 }
 
-class CategoryViewController: UIViewController {
+final class CategoryViewController: UIViewController {
     weak var delegate: CategoryViewControllerDelegate?
     var categories: [TrackerCategory] = []
     var selectedCategory: TrackerCategory?
@@ -28,10 +28,17 @@ class CategoryViewController: UIViewController {
         tableView.delegate = self
         tableView.dataSource = self
         tableView.register(
-            UITableViewCell.self,
+            CategoryCell.self,
             forCellReuseIdentifier: "CategoryCell"
         )
+        tableView.separatorStyle = .none
+        tableView.backgroundColor = .clear
+        tableView.layer.cornerRadius = 16
+        tableView.clipsToBounds = true
         tableView.translatesAutoresizingMaskIntoConstraints = false
+        tableView.tableFooterView = UIView()
+        tableView.contentInsetAdjustmentBehavior = .never
+        tableView.isScrollEnabled = false
 
         // Done Button
         doneButton.setTitle("Готово", for: .normal)
@@ -59,10 +66,17 @@ class CategoryViewController: UIViewController {
         NSLayoutConstraint.activate([
             // Table View
             tableView.topAnchor.constraint(
-                equalTo: view.safeAreaLayoutGuide.topAnchor
+                equalTo: view.safeAreaLayoutGuide.topAnchor,
+                constant: 16
             ),
-            tableView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
-            tableView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            tableView.leadingAnchor.constraint(
+                equalTo: view.leadingAnchor,
+                constant: 16
+            ),
+            tableView.trailingAnchor.constraint(
+                equalTo: view.trailingAnchor,
+                constant: -16
+            ),
             tableView.bottomAnchor.constraint(
                 equalTo: doneButton.topAnchor,
                 constant: -20
@@ -70,8 +84,7 @@ class CategoryViewController: UIViewController {
 
             // Done Button
             doneButton.bottomAnchor.constraint(
-                equalTo: view.safeAreaLayoutGuide.bottomAnchor,
-                constant: -20
+                equalTo: view.safeAreaLayoutGuide.bottomAnchor
             ),
             doneButton.leadingAnchor.constraint(
                 equalTo: view.leadingAnchor,
@@ -107,12 +120,10 @@ extension CategoryViewController: UITableViewDataSource {
         let cell = tableView.dequeueReusableCell(
             withIdentifier: "CategoryCell",
             for: indexPath
-        )
+        ) as! CategoryCell
         let category = categories[indexPath.row]
-
-        cell.textLabel?.text = category.title
-        cell.accessoryType =
-            (selectedCategory?.title == category.title) ? .checkmark : .none
+        let isSelected = category.title == selectedCategory?.title
+        cell.configure(with: category.title, isSelected: isSelected)
 
         return cell
     }
@@ -120,6 +131,10 @@ extension CategoryViewController: UITableViewDataSource {
 
 // MARK: - UITableViewDelegate
 extension CategoryViewController: UITableViewDelegate {
+    func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
+        return 75
+    }
+    
     func tableView(
         _ tableView: UITableView,
         didSelectRowAt indexPath: IndexPath
@@ -128,5 +143,95 @@ extension CategoryViewController: UITableViewDelegate {
 
         selectedCategory = categories[indexPath.row]
         tableView.reloadData()
+    }
+}
+
+class CategoryCell: UITableViewCell {
+    private let titleLabel = UILabel()
+    private let checkmarkImageView = UIImageView(image: UIImage(systemName: "checkmark"))
+    
+    override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
+        super.init(style: style, reuseIdentifier: reuseIdentifier)
+        setupUI()
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+            private func setupUI() {
+                backgroundColor = .systemGray6
+                selectionStyle = .none
+        
+        titleLabel.font = .systemFont(ofSize: 17)
+        titleLabel.textColor = .label
+        titleLabel.translatesAutoresizingMaskIntoConstraints = false
+        
+        checkmarkImageView.tintColor = .systemBlue
+        checkmarkImageView.isHidden = true
+        checkmarkImageView.translatesAutoresizingMaskIntoConstraints = false
+        
+        contentView.addSubview(titleLabel)
+        contentView.addSubview(checkmarkImageView)
+        
+        NSLayoutConstraint.activate([
+            titleLabel.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 16),
+            titleLabel.centerYAnchor.constraint(equalTo: contentView.centerYAnchor),
+            
+            checkmarkImageView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -16),
+            checkmarkImageView.centerYAnchor.constraint(equalTo: contentView.centerYAnchor)
+        ])
+    }
+    
+            override func layoutSubviews() {
+                super.layoutSubviews()
+                
+                // Добавляем разделитель только если это не последняя ячейка
+                if let tableView = superview as? UITableView,
+                   let indexPath = tableView.indexPath(for: self) {
+                    let isLastCell = indexPath.row == tableView.numberOfRows(inSection: indexPath.section) - 1
+                    
+                    // Удаляем все существующие разделители
+                    layer.sublayers?.removeAll { $0.name == "separator" }
+                    
+                    if !isLastCell {
+                        let separator = CALayer()
+                        separator.name = "separator"
+                        separator.backgroundColor = UIColor.systemGray4.cgColor
+                        separator.frame = CGRect(x: 16, y: bounds.height - 0.5, width: bounds.width - 32, height: 0.5)
+                        layer.addSublayer(separator)
+                    }
+                    
+                    // Добавляем скругление для первой и последней ячейки
+                    let isFirstCell = indexPath.row == 0
+                    if isFirstCell && isLastCell {
+                        // Если только одна ячейка - скругляем все углы
+                        layer.cornerRadius = 16
+                        layer.maskedCorners = [.layerMinXMinYCorner, .layerMaxXMinYCorner, .layerMinXMaxYCorner, .layerMaxXMaxYCorner]
+                    } else if isFirstCell {
+                        // Первая ячейка - скругляем верхние углы
+                        layer.cornerRadius = 16
+                        layer.maskedCorners = [.layerMinXMinYCorner, .layerMaxXMinYCorner]
+                    } else if isLastCell {
+                        // Последняя ячейка - скругляем нижние углы
+                        layer.cornerRadius = 16
+                        layer.maskedCorners = [.layerMinXMaxYCorner, .layerMaxXMaxYCorner]
+                    } else {
+                        // Средние ячейки - без скругления
+                        layer.cornerRadius = 0
+                        layer.maskedCorners = []
+                    }
+                }
+            }
+    
+    override func prepareForReuse() {
+        super.prepareForReuse()
+        titleLabel.text = nil
+        checkmarkImageView.isHidden = true
+    }
+    
+    func configure(with title: String, isSelected: Bool) {
+        titleLabel.text = title
+        checkmarkImageView.isHidden = !isSelected
     }
 }

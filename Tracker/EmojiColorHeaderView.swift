@@ -1,6 +1,6 @@
 import UIKit
 
-class EmojiColorHeaderView: UICollectionReusableView {
+final class EmojiColorHeaderView: UICollectionReusableView {
     private let titleLabel = UILabel()
     
     override init(frame: CGRect) {

@@ -53,10 +53,11 @@ class AddTrackerViewController: UIViewController {
     private var selectedEmoji: String?
     private var selectedColor: UIColor?
 
-    private let emojis = [
-        "🌱", "💧", "🏃‍♂️", "📚", "🍎", "💪", "🎯", "🌟", "🔥", "💡", "🎨", "🎵", "⚽", "🎮",
-        "🎭", "🎪", "🎨", "🎵",
+    let emojis = [
+        "🌱", "💧", "🏃‍♂️", "📚", "🍎", "💪", "🎯", "🌟", "🔥",
+        "💡", "🎨", "🎵", "⚽", "🎮", "🎭", "🎪", "🚴‍♂️", "🧘‍♀️",
     ]
+
     private let colors: [(String, UIColor)] = [
         ("Красный", UIColor(red: 0.961, green: 0.420, blue: 0.424, alpha: 1.0)),  // #F56B6C
         (
@@ -118,6 +119,7 @@ class AddTrackerViewController: UIViewController {
         super.viewDidLoad()
         setupUI()
         setupConstraints()
+        setupDefaultCategory()
     }
 
     // MARK: - UI Setup
@@ -137,7 +139,7 @@ class AddTrackerViewController: UIViewController {
 
         // Name TextField
         nameTextField.placeholder = "Введите название трекера"
-        nameTextField.borderStyle = .roundedRect
+        nameTextField.borderStyle = .none
         nameTextField.backgroundColor = .systemGray6
         nameTextField.layer.cornerRadius = 16
         nameTextField.delegate = self
@@ -147,6 +149,13 @@ class AddTrackerViewController: UIViewController {
             for: .editingChanged
         )
         nameTextField.translatesAutoresizingMaskIntoConstraints = false
+
+        // Добавляем внутренний отступ для текста
+        let leftPaddingView = UIView(
+            frame: CGRect(x: 0, y: 0, width: 16, height: 0)
+        )
+        nameTextField.leftView = leftPaddingView
+        nameTextField.leftViewMode = .always
 
         // Name Error Label
         nameErrorLabel.text = "Ограничение 38 символов"
@@ -329,7 +338,7 @@ class AddTrackerViewController: UIViewController {
 
         // Настраиваем контейнер для опций
         optionsContainer.backgroundColor = .systemGray6
-        optionsContainer.layer.cornerRadius = 8
+        optionsContainer.layer.cornerRadius = 16
         optionsContainer.translatesAutoresizingMaskIntoConstraints = false
 
         // Настраиваем разделитель
@@ -853,6 +862,31 @@ extension AddTrackerViewController: UICollectionViewDelegateFlowLayout {
         referenceSizeForHeaderInSection section: Int
     ) -> CGSize {
         return CGSize(width: collectionView.frame.width, height: 50)
+    }
+
+    // MARK: - Default Category Setup
+    private func setupDefaultCategory() {
+        // Выбираем первую категорию по умолчанию, если есть категории
+        if let firstCategory = categories.first {
+            selectedCategory = firstCategory
+            updateCategoryButtonTitle()
+        }
+    }
+
+    private func updateCategoryButtonTitle() {
+        guard let selectedCategory = selectedCategory else { return }
+
+        // Находим textStackView внутри categoryStack
+        if let textStackView = categoryStack.arrangedSubviews.first
+            as? UIStackView,
+            let titleLabel = textStackView.arrangedSubviews.first as? UILabel,
+            let selectedLabel = textStackView.arrangedSubviews.last as? UILabel
+        {
+
+            titleLabel.text = "Категория"
+            selectedLabel.text = selectedCategory.title
+        }
+        updateCreateButtonState()
     }
 }
 
