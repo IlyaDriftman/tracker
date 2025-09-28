@@ -175,6 +175,7 @@ class AddTrackerViewController: UIViewController {
         categoryButton.contentHorizontalAlignment = .fill
         categoryButton.adjustsImageWhenHighlighted = false
         categoryButton.showsTouchWhenHighlighted = true
+        categoryButton.isEnabled = false
 
         // Текст "Категория"
         let categoryTitleLabel = UILabel()
@@ -190,6 +191,7 @@ class AddTrackerViewController: UIViewController {
         categorySelectedLabel.font = .systemFont(ofSize: 15)
         categorySelectedLabel.textAlignment = .left
         categorySelectedLabel.numberOfLines = 0
+        
 
         // Вертикальный StackView для текста
         let categoryTextStackView = UIStackView()
@@ -717,7 +719,9 @@ class AddTrackerViewController: UIViewController {
             !(nameTextField.text?.isEmpty ?? true) && !isNameTooLong()
             && selectedCategory != nil
         createButton.isEnabled = isEnabled
-        createButton.backgroundColor = isEnabled ? .systemBlue : .systemGray
+        let trackerBlack = UIColor(named: "trackerBlack")
+        let trackerGrey = UIColor(named: "trackerGrey")
+        createButton.backgroundColor = isEnabled ? .trackerBlack : .trackerGrey
     }
 
     private func isNameTooLong() -> Bool {
@@ -870,6 +874,7 @@ extension AddTrackerViewController: UICollectionViewDelegateFlowLayout {
         if let firstCategory = categories.first {
             selectedCategory = firstCategory
             updateCategoryButtonTitle()
+        
         }
     }
 
