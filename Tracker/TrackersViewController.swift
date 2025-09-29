@@ -39,10 +39,10 @@ class TrackersViewController: UIViewController {
     private var categories: [TrackerCategory] = []
     private var completedTrackers: [TrackerRecord] = []
     private var currentDate: Date
-    let defaultCategory = TrackerCategory(
-        title: "Общее",
-        trackers: []
-    )
+    //let defaultCategory = TrackerCategory(
+   //     title: "Общее",
+    //    trackers: []
+    //)
 
     // MARK: - Initialization
     override init(nibName nibNameOrNil: String?, bundle nibBundleOrNil: Bundle?)
@@ -60,7 +60,7 @@ class TrackersViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         setupUI()
-        categories = [defaultCategory]
+       // categories = [defaultCategory]
         setupTestData()
         reloadData()
     }
@@ -338,6 +338,7 @@ class TrackersViewController: UIViewController {
         )
 
         trackers = [tracker1, tracker2, tracker3]
+        
 
         // Создаем тестовые категории
         let habitCategory = TrackerCategory(
@@ -349,7 +350,8 @@ class TrackersViewController: UIViewController {
             trackers: [tracker2, tracker3]
         )
 
-        categories += [habitCategory, eventCategory]
+        categories = [habitCategory, eventCategory]
+        //categories = []
 
         // Применяем фильтр для инициализации visibleCategories
         applyDateFilter()
@@ -538,21 +540,23 @@ extension TrackersViewController:
         if let categoryIndex = categories.firstIndex(where: {
             $0.title == category.title
         }) {
+            // Категория существует - добавляем трекер
             var oldCategory = categories[categoryIndex]
-
-            // создаём новый массив трекеров
             let updatedTrackers = oldCategory.trackers + [tracker]
-
-            // создаём новый объект категории
             let updatedCategory = TrackerCategory(
                 title: oldCategory.title,
                 trackers: updatedTrackers
             )
-
-            // заменяем в массиве категорий
             categories[categoryIndex] = updatedCategory
-
-            applyDateFilter()
+        } else {
+            // Категории нет - создаем новую "Общее" с трекером
+            let newCategory = TrackerCategory(
+                title: "Общее",
+                trackers: [tracker]
+            )
+            categories.append(newCategory)
         }
+        
+        applyDateFilter()
     }
 }

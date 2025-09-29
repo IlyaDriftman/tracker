@@ -5,17 +5,23 @@ protocol AddTrackerViewControllerDelegate: AnyObject {
 }
 
 extension AddTrackerViewController: CategoryViewControllerDelegate {
-    func didSelectCategory(_ category: TrackerCategory) {
-        selectedCategory = category
+    func didSelectCategory(_ category: TrackerCategory?) {
+        // Если категория выбрана - используем её, иначе оставляем "Общее"
+        if let category = category {
+            selectedCategory = category
+        } else {
+            // Если ничего не выбрано, остается "Общее" по умолчанию
+            selectedCategory = TrackerCategory(title: "Общее", trackers: [])
+        }
+        
         // Находим textStackView внутри categoryStack
         if let textStackView = categoryStack.arrangedSubviews.first
             as? UIStackView,
             let titleLabel = textStackView.arrangedSubviews.first as? UILabel,
             let selectedLabel = textStackView.arrangedSubviews.last as? UILabel
         {
-
             titleLabel.text = "Категория"
-            selectedLabel.text = category.title
+            selectedLabel.text = selectedCategory?.title ?? "Общее"
         }
         updateCreateButtonState()
     }
@@ -621,10 +627,8 @@ class AddTrackerViewController: UIViewController {
             return
         }
 
-        guard let selectedCategory = selectedCategory else {
-            showAlert(title: "Ошибка", message: "Выберите категорию")
-            return
-        }
+        // Используем выбранную категорию или категорию по умолчанию
+        let categoryToUse = selectedCategory ?? getDefaultCategory()
 
         guard let selectedEmoji = selectedEmoji else {
             showAlert(title: "Ошибка", message: "Выберите эмодзи")
@@ -646,7 +650,7 @@ class AddTrackerViewController: UIViewController {
         )
 
         print("Created tracker: \(newTracker)")
-        delegate?.didCreateTracker(newTracker, in: selectedCategory)
+        delegate?.didCreateTracker(newTracker, in: categoryToUse)
         dismiss(animated: true)
     }
 
@@ -656,6 +660,7 @@ class AddTrackerViewController: UIViewController {
         scheduleVC.onWeekdaysChanged = { [weak self] weekdays in
             self?.selectedWeekdays = weekdays
             self?.updateScheduleButtonTitle()
+            self?.updateCreateButtonState()
         }
 
         let navController = UINavigationController(
@@ -715,13 +720,16 @@ class AddTrackerViewController: UIViewController {
     }
 
     private func updateCreateButtonState() {
-        let isEnabled =
-            !(nameTextField.text?.isEmpty ?? true) && !isNameTooLong()
-            && selectedCategory != nil
+        let hasName = !(nameTextField.text?.isEmpty ?? true) && !isNameTooLong()
+        let hasCategory = selectedCategory != nil
+        let hasSchedule = !selectedWeekdays.isEmpty
+        
+        let isEnabled = hasName && hasCategory && hasSchedule
+        
         createButton.isEnabled = isEnabled
-        let trackerBlack = UIColor(named: "trackerBlack")
-        let trackerGrey = UIColor(named: "trackerGrey")
-        createButton.backgroundColor = isEnabled ? .trackerBlack : .trackerGrey
+        let trackerBlack = UIColor(named: "trackerBlack") ?? UIColor(red: 0.102, green: 0.106, blue: 0.133, alpha: 1.0) // #1A1B22
+        let trackerGrey = UIColor(named: "trackerGrey") ?? UIColor(red: 0.682, green: 0.686, blue: 0.706, alpha: 1.0) // #AEAFB4
+        createButton.backgroundColor = isEnabled ? trackerBlack : trackerGrey
     }
 
     private func isNameTooLong() -> Bool {
@@ -870,11 +878,18 @@ extension AddTrackerViewController: UICollectionViewDelegateFlowLayout {
 
     // MARK: - Default Category Setup
     private func setupDefaultCategory() {
-        // Выбираем первую категорию по умолчанию, если есть категории
-        if let firstCategory = categories.first {
-            selectedCategory = firstCategory
-            updateCategoryButtonTitle()
-        
+        // Всегда устанавливаем "Общее" как категорию по умолчанию
+        selectedCategory = TrackerCategory(title: "Общее", trackers: [])
+        updateCategoryButtonTitle()
+    }
+    
+    private func getDefaultCategory() -> TrackerCategory {
+        // Всегда возвращаем "Общее" - либо существующую, либо создаем новую
+        if let generalCategory = categories.first(where: { $0.title == "Общее" }) {
+            return generalCategory
+        } else {
+            // Если категории "Общее" нет, создаем временную для передачи в delegate
+            return TrackerCategory(title: "Общее", trackers: [])
         }
     }
 

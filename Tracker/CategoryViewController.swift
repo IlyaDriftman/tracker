@@ -1,7 +1,7 @@
 import UIKit
 
 protocol CategoryViewControllerDelegate: AnyObject {
-    func didSelectCategory(_ category: TrackerCategory)
+    func didSelectCategory(_ category: TrackerCategory?)
 }
 
 final class CategoryViewController: UIViewController {
@@ -99,9 +99,8 @@ final class CategoryViewController: UIViewController {
     }
 
     @objc private func doneButtonTapped() {
-        if let selectedCategory = selectedCategory {
-            delegate?.didSelectCategory(selectedCategory)
-        }
+        // Всегда вызываем delegate, даже если ничего не выбрано
+        delegate?.didSelectCategory(selectedCategory)
         dismiss(animated: true)
     }
 }
