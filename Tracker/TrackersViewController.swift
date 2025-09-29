@@ -39,6 +39,10 @@ class TrackersViewController: UIViewController {
     private var categories: [TrackerCategory] = []
     private var completedTrackers: [TrackerRecord] = []
     private var currentDate: Date
+    let defaultCategory = TrackerCategory(
+        title: "Общее",
+        trackers: []
+    )
 
     // MARK: - Initialization
     override init(nibName nibNameOrNil: String?, bundle nibBundleOrNil: Bundle?)
@@ -56,6 +60,7 @@ class TrackersViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         setupUI()
+        categories = [defaultCategory]
         setupTestData()
         reloadData()
     }
@@ -109,6 +114,7 @@ class TrackersViewController: UIViewController {
             )
         }
         collectionView.reloadData()
+        updatePlaceholderVisibility()
     }
 
     @objc private func dateChanged() {
@@ -343,15 +349,18 @@ class TrackersViewController: UIViewController {
             trackers: [tracker2, tracker3]
         )
 
-        categories = [habitCategory, eventCategory]
+        categories += [habitCategory, eventCategory]
 
-        // Обновляем коллекцию
-        collectionView.reloadData()
-        updatePlaceholderVisibility()
+        // Применяем фильтр для инициализации visibleCategories
+        applyDateFilter()
     }
 
     private func updatePlaceholderVisibility() {
-        placeholderStackView.isHidden = !trackers.isEmpty
+        let isEmpty = visibleCategories.isEmpty
+        
+        placeholderStackView.isHidden = !isEmpty
+        collectionView.isHidden = isEmpty
+        
     }
 }
 extension TrackersViewController: UISearchBarDelegate {
