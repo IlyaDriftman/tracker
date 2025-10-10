@@ -85,7 +85,7 @@ class AddTrackerViewController: UIViewController {
         ),  // #955135
         ("Серый", UIColor(red: 0.682, green: 0.686, blue: 0.706, alpha: 1.0)),  // #AEAFB4
         ("Черный", UIColor(red: 0.102, green: 0.106, blue: 0.133, alpha: 1.0)),  // #1A1B22
-        ("Белый", UIColor(red: 0.996, green: 0.996, blue: 0.996, alpha: 1.0)),  // #FEFEFE
+        ("Лавандовый", UIColor(red: 0.694, green: 0.612, blue: 0.851, alpha: 1.0)),  // #B19CD9
         ("Темно-зеленый", UIColor(red: 0.0, green: 0.5, blue: 0.0, alpha: 1.0)),
         ("Темно-синий", UIColor(red: 0.0, green: 0.0, blue: 0.5, alpha: 1.0)),
         ("Золотой", UIColor(red: 1.0, green: 0.84, blue: 0.0, alpha: 1.0)),
@@ -103,7 +103,7 @@ class AddTrackerViewController: UIViewController {
         layout.minimumInteritemSpacing = 5
         layout.minimumLineSpacing = 5
         layout.sectionInset = UIEdgeInsets(
-            top: 16,
+            top: 24,  // Отступ от заголовка до ячеек
             left: 8,
             bottom: 16,
             right: 8
@@ -541,7 +541,7 @@ class AddTrackerViewController: UIViewController {
             // Collection View
             collectionView.topAnchor.constraint(
                 equalTo: optionsContainer.bottomAnchor,
-                constant: 24
+                constant: 32  // Отступ от расписания до заголовка Emoji
             ),
             collectionView.leadingAnchor.constraint(
                 equalTo: contentView.leadingAnchor,
@@ -649,6 +649,7 @@ class AddTrackerViewController: UIViewController {
             schedule: selectedWeekdays.isEmpty ? nil : .custom(selectedWeekdays)
         )
 
+        print("DEBUG: Создаем трекер с цветом: \(selectedColor)")
         print("Created tracker: \(newTracker)")
         delegate?.didCreateTracker(newTracker, in: categoryToUse)
         dismiss(animated: true)
@@ -723,8 +724,10 @@ class AddTrackerViewController: UIViewController {
         let hasName = !(nameTextField.text?.isEmpty ?? true) && !isNameTooLong()
         let hasCategory = selectedCategory != nil
         let hasSchedule = !selectedWeekdays.isEmpty
+        let hasEmoji = selectedEmoji != nil
+        let hasColor = selectedColor != nil
         
-        let isEnabled = hasName && hasCategory && hasSchedule
+        let isEnabled = hasName && hasCategory && hasSchedule && hasEmoji && hasColor
         
         createButton.isEnabled = isEnabled
         let trackerBlack = UIColor(named: "trackerBlack") ?? UIColor(red: 0.102, green: 0.106, blue: 0.133, alpha: 1.0) // #1A1B22
@@ -794,7 +797,11 @@ extension AddTrackerViewController: UICollectionViewDataSource {
         } else {
             // Цвета секция
             let colorData = colors[indexPath.item]
-            let isSelected = colorData.1 == selectedColor
+            let isSelected = areColorsEqual(colorData.1, selectedColor)
+            
+            // Отладочная информация
+            print("DEBUG: Сравниваем цвета - \(colorData.0): \(colorData.1) == selectedColor: \(selectedColor ?? UIColor.clear) -> \(isSelected)")
+            
             cell.configureColor(with: colorData.1, isSelected: isSelected)
         }
 
@@ -834,7 +841,9 @@ extension AddTrackerViewController: UICollectionViewDelegate {
             selectedEmoji = emojis[indexPath.item]
         } else {
             // Цвета секция
-            selectedColor = colors[indexPath.item].1
+            let colorData = colors[indexPath.item]
+            selectedColor = colorData.1
+            print("DEBUG: Выбран цвет - \(colorData.0): \(colorData.1)")
         }
 
         collectionView.reloadData()
@@ -849,7 +858,7 @@ extension AddTrackerViewController: UICollectionViewDelegateFlowLayout {
         layout collectionViewLayout: UICollectionViewLayout,
         sizeForItemAt indexPath: IndexPath
     ) -> CGSize {
-        return CGSize(width: 52, height: 52)  // Фиксированный размер 52x52
+        return CGSize(width: 52, height: 52)
     }
 
     func collectionView(
@@ -873,9 +882,33 @@ extension AddTrackerViewController: UICollectionViewDelegateFlowLayout {
         layout collectionViewLayout: UICollectionViewLayout,
         referenceSizeForHeaderInSection section: Int
     ) -> CGSize {
-        return CGSize(width: collectionView.frame.width, height: 50)
+        return CGSize(width: collectionView.frame.width, height: 18)  // Высота текста заголовка
     }
 
+    // MARK: - Color Comparison Helper
+    private func areColorsEqual(_ color1: UIColor?, _ color2: UIColor?) -> Bool {
+        guard let color1 = color1, let color2 = color2 else {
+            return color1 == nil && color2 == nil
+        }
+        
+        // Конвертируем оба цвета в RGB пространство для корректного сравнения
+        let rgbColor1 = color1.converted(to: CGColorSpaceCreateDeviceRGB())
+        let rgbColor2 = color2.converted(to: CGColorSpaceCreateDeviceRGB())
+        
+        guard let components1 = rgbColor1.components,
+              let components2 = rgbColor2.components,
+              components1.count >= 3,
+              components2.count >= 3 else {
+            return false
+        }
+        
+        // Сравниваем RGB компоненты с небольшой погрешностью
+        let tolerance: CGFloat = 0.01
+        return abs(components1[0] - components2[0]) < tolerance &&
+               abs(components1[1] - components2[1]) < tolerance &&
+               abs(components1[2] - components2[2]) < tolerance
+    }
+    
     // MARK: - Default Category Setup
     private func setupDefaultCategory() {
         // Всегда устанавливаем "Общее" как категорию по умолчанию

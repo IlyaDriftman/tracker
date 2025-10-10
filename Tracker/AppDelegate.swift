@@ -1,4 +1,5 @@
 import UIKit
+import CoreData
 
 @main
 final class AppDelegate: UIResponder, UIApplicationDelegate {
@@ -26,5 +27,8 @@ final class AppDelegate: UIResponder, UIApplicationDelegate {
             sessionRole: connectingSceneSession.role
         )
     }
-
+    
+    func applicationWillTerminate(_ application: UIApplication) {
+            CoreDataStack.shared.saveContext()
+        }
 }
