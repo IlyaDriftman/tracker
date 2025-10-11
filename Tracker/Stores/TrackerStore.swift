@@ -63,15 +63,22 @@ final class TrackerStore: NSObject {
     func sectionTitle(at section: Int) -> String? {
         return fetchedResultsController.sections?[section].name
     }
-
+    
+    func findTracker(by id: UUID) throws -> TrackerCoreData? {
+        let request = TrackerCoreData.fetchRequest()
+        request.predicate = NSPredicate(format: "id == %@", id as CVarArg)
+        request.fetchLimit = 1
+        
+        let results = try context.fetch(request)
+        return results.first
+    }
+    
     // MARK: - Conversion Helper
     func tracker(from trackerCD: TrackerCoreData) -> Tracker? {
-        guard
-            let id = trackerCD.id,
-            let title = trackerCD.title,
-            let emoji = trackerCD.emoji,
-            let colorHex = trackerCD.colorHEX
-        else { return nil }
+        guard let id = trackerCD.id else { return nil }
+        guard let title = trackerCD.title else { return nil }
+        guard let emoji = trackerCD.emoji else { return nil }
+        guard let colorHex = trackerCD.colorHEX else { return nil }
 
         let color = UIColor(hex: colorHex) ?? .black
 

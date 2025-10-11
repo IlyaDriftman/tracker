@@ -7,8 +7,17 @@
 
 import CoreData
 
+private enum CoreDataKeys {
+    static let title = "title"
+    static let categoryTitle = "category.title"
+    static let date = "date"
+}
+
 final class TrackerCategoryStore: NSObject {
     private let context: NSManagedObjectContext
+    private var numberOfCategories: Int {
+        return fetchedResultsController.sections?[0].numberOfObjects ?? 0
+    }
     private var fetchedResultsController:
         NSFetchedResultsController<TrackerCategoryCoreData>!
     weak var delegate: StoreChangesDelegate?
@@ -22,7 +31,7 @@ final class TrackerCategoryStore: NSObject {
     private func setupFetchedResultsController() {
         let request = TrackerCategoryCoreData.fetchRequest()
         request.sortDescriptors = [
-            NSSortDescriptor(key: "title", ascending: true)
+            NSSortDescriptor(key: CoreDataKeys.title, ascending: true)
         ]
 
         fetchedResultsController = NSFetchedResultsController(
@@ -43,9 +52,6 @@ final class TrackerCategoryStore: NSObject {
         try fetchedResultsController.performFetch()
     }
 
-    var numberOfCategories: Int {
-        return fetchedResultsController.sections?[0].numberOfObjects ?? 0
-    }
 
     func category(at index: Int) -> TrackerCategoryCoreData {
         let indexPath = IndexPath(row: index, section: 0)

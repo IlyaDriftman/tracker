@@ -489,10 +489,20 @@ extension TrackersViewController: TrackerCellDelegate {
         if calendar.isDate(currentDate, inSameDayAs: today)
             || currentDate < today
         {
+            // 1. Обновляем локальный массив
             let trackerRecord = TrackerRecord(trackerId: id, date: currentDate)
             completedTrackers.append(trackerRecord)
+            
+            // 2. Сохраняем в Core Data
+            do {
+                if let trackerCD = try trackerStore.findTracker(by: id) {
+                    try recordStore.addRecord(tracker: trackerCD, date: currentDate)
+                }
+            } catch {
+                print("[completetracker in TrackersViewController]: Core Data save error id=\(id)")
+            }
 
-            // Обновляем только иконку кнопки без перезагрузки ячейки
+            // 3. Обновляем UI
             if let cell = collectionView.cellForItem(at: indexPath)
                 as? TrackerCell
             {
@@ -515,11 +525,19 @@ extension TrackersViewController: TrackerCellDelegate {
         if calendar.isDate(currentDate, inSameDayAs: today)
             || currentDate < today
         {
+            // 1. Удаляем из локального массива
             completedTrackers.removeAll { TrackerRecord in
                 isSameTrackerRecord(trackerRecord: TrackerRecord, id: id)
             }
+            
+            // 2. Удаляем из Core Data
+            do {
+                try recordStore.deleteRecord(trackerId: id, date: currentDate)
+            } catch {
+                print("[uncompleteTracker in TrackersViewController]: Core Data delete error id=\(id)")
+            }
 
-            // Обновляем только иконку кнопки без перезагрузки ячейки
+            // 3. Обновляем UI
             if let cell = collectionView.cellForItem(at: indexPath)
                 as? TrackerCell
             {

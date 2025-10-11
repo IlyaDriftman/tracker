@@ -74,7 +74,30 @@ final class TrackerRecordStore: NSObject {
         context.delete(record)
         try context.save()
     }
-
+    
+    func deleteRecord(trackerId: UUID, date: Date) throws {
+        let request = TrackerRecordCoreData.fetchRequest()
+        
+        // Находим запись с конкретным трекером и датой
+        let calendar = Calendar.current
+        let startOfDay = calendar.startOfDay(for: date)
+        let endOfDay = calendar.date(byAdding: .day, value: 1, to: startOfDay)!
+        
+        request.predicate = NSPredicate(
+            format: "tracker.id == %@ AND date >= %@ AND date < %@",
+            trackerId as CVarArg,
+            startOfDay as NSDate,
+            endOfDay as NSDate
+        )
+        request.fetchLimit = 1
+        
+        let results = try context.fetch(request)
+        if let recordToDelete = results.first {
+            context.delete(recordToDelete)
+            try context.save()
+        }
+    }
+    
     // MARK: - Legacy (для совместимости)
     func fetchAllRecords() throws -> [TrackerRecordCoreData] {
         let request = TrackerRecordCoreData.fetchRequest()

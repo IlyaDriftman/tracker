@@ -41,7 +41,7 @@ class AddTrackerViewController: UIViewController {
     private let optionsContainer = UIView()
     private let categoryButton = UIButton(type: .system)
     private let scheduleButton = UIButton(type: .system)
-    private let separatorLine1 = UIView()  // между категорией и расписанием
+    private let categoryScheduleSeparator = UIView()  // между категорией и расписанием
     private let collectionView: UICollectionView
     private let buttonsContainer = UIView()
     private let cancelButton = UIButton(type: .system)
@@ -58,6 +58,7 @@ class AddTrackerViewController: UIViewController {
     private var selectedWeekdays: Set<Weekday> = []
     private var selectedEmoji: String?
     private var selectedColor: UIColor?
+    private let heightHeader: CGFloat = 18
 
     let emojis = [
         "🌱", "💧", "🏃‍♂️", "📚", "🍎", "💪", "🎯", "🌟", "🔥",
@@ -350,13 +351,13 @@ class AddTrackerViewController: UIViewController {
         optionsContainer.translatesAutoresizingMaskIntoConstraints = false
 
         // Настраиваем разделитель
-        separatorLine1.backgroundColor = .systemGray4
-        separatorLine1.translatesAutoresizingMaskIntoConstraints = false
+        categoryScheduleSeparator.backgroundColor = .systemGray4
+        categoryScheduleSeparator.translatesAutoresizingMaskIntoConstraints = false
 
         // Добавляем элементы в контейнер
         optionsContainer.addSubview(categoryButton)
         optionsContainer.addSubview(scheduleButton)
-        optionsContainer.addSubview(separatorLine1)
+        optionsContainer.addSubview(categoryScheduleSeparator)
 
         [titleLabel, nameView, optionsContainer, collectionView].forEach {
             contentView.addSubview($0)
@@ -495,23 +496,23 @@ class AddTrackerViewController: UIViewController {
                 constant: -16
             ),
 
-            // Separator Line 1 (между категорией и расписанием)
-            separatorLine1.topAnchor.constraint(
+            // Category-Schedule Separator
+            categoryScheduleSeparator.topAnchor.constraint(
                 equalTo: categoryButton.bottomAnchor
             ),
-            separatorLine1.leadingAnchor.constraint(
+            categoryScheduleSeparator.leadingAnchor.constraint(
                 equalTo: optionsContainer.leadingAnchor,
                 constant: 16
             ),
-            separatorLine1.trailingAnchor.constraint(
+            categoryScheduleSeparator.trailingAnchor.constraint(
                 equalTo: optionsContainer.trailingAnchor,
                 constant: -16
             ),
-            separatorLine1.heightAnchor.constraint(equalToConstant: 1),
+            categoryScheduleSeparator.heightAnchor.constraint(equalToConstant: 1),
 
             // Schedule Button
             scheduleButton.topAnchor.constraint(
-                equalTo: separatorLine1.bottomAnchor
+                equalTo: categoryScheduleSeparator.bottomAnchor
             ),
             scheduleButton.leadingAnchor.constraint(
                 equalTo: optionsContainer.leadingAnchor
@@ -790,18 +791,12 @@ extension AddTrackerViewController: UICollectionViewDataSource {
             ) as! EmojiColorCell
 
         if indexPath.section == 0 {
-            // Эмодзи секция
             let emoji = emojis[indexPath.item]
             let isSelected = emoji == selectedEmoji
             cell.configureEmoji(with: emoji, isSelected: isSelected)
         } else {
-            // Цвета секция
             let colorData = colors[indexPath.item]
             let isSelected = areColorsEqual(colorData.1, selectedColor)
-            
-            // Отладочная информация
-            print("DEBUG: Сравниваем цвета - \(colorData.0): \(colorData.1) == selectedColor: \(selectedColor ?? UIColor.clear) -> \(isSelected)")
-            
             cell.configureColor(with: colorData.1, isSelected: isSelected)
         }
 
@@ -843,7 +838,6 @@ extension AddTrackerViewController: UICollectionViewDelegate {
             // Цвета секция
             let colorData = colors[indexPath.item]
             selectedColor = colorData.1
-            print("DEBUG: Выбран цвет - \(colorData.0): \(colorData.1)")
         }
 
         collectionView.reloadData()
@@ -858,7 +852,7 @@ extension AddTrackerViewController: UICollectionViewDelegateFlowLayout {
         layout collectionViewLayout: UICollectionViewLayout,
         sizeForItemAt indexPath: IndexPath
     ) -> CGSize {
-        return CGSize(width: 52, height: 52)
+        CGSize(width: 52, height: 52)
     }
 
     func collectionView(
@@ -866,7 +860,7 @@ extension AddTrackerViewController: UICollectionViewDelegateFlowLayout {
         layout collectionViewLayout: UICollectionViewLayout,
         minimumLineSpacingForSectionAt section: Int
     ) -> CGFloat {
-        return 5  // Расстояние между рядами
+        5  // Расстояние между рядами
     }
 
     func collectionView(
@@ -874,7 +868,7 @@ extension AddTrackerViewController: UICollectionViewDelegateFlowLayout {
         layout collectionViewLayout: UICollectionViewLayout,
         minimumInteritemSpacingForSectionAt section: Int
     ) -> CGFloat {
-        return 5  // Расстояние между элементами в ряду
+        5  // Расстояние между элементами в ряду
     }
 
     func collectionView(
@@ -882,31 +876,31 @@ extension AddTrackerViewController: UICollectionViewDelegateFlowLayout {
         layout collectionViewLayout: UICollectionViewLayout,
         referenceSizeForHeaderInSection section: Int
     ) -> CGSize {
-        return CGSize(width: collectionView.frame.width, height: 18)  // Высота текста заголовка
+        CGSize(width: collectionView.frame.width, height: heightHeader)
     }
 
     // MARK: - Color Comparison Helper
-    private func areColorsEqual(_ color1: UIColor?, _ color2: UIColor?) -> Bool {
-        guard let color1 = color1, let color2 = color2 else {
-            return color1 == nil && color2 == nil
+    private func areColorsEqual(_ firstColor: UIColor?, _ secondColor: UIColor?) -> Bool {
+        guard let firstColor = firstColor, let secondColor = secondColor else {
+            return firstColor == nil && secondColor == nil
         }
         
         // Конвертируем оба цвета в RGB пространство для корректного сравнения
-        let rgbColor1 = color1.converted(to: CGColorSpaceCreateDeviceRGB())
-        let rgbColor2 = color2.converted(to: CGColorSpaceCreateDeviceRGB())
+        let rgbFirstColor = firstColor.converted(to: CGColorSpaceCreateDeviceRGB())
+        let rgbSecondColor = secondColor.converted(to: CGColorSpaceCreateDeviceRGB())
         
-        guard let components1 = rgbColor1.components,
-              let components2 = rgbColor2.components,
-              components1.count >= 3,
-              components2.count >= 3 else {
+        guard let firstComponents = rgbFirstColor.components,
+              let secondComponents = rgbSecondColor.components,
+              firstComponents.count >= 3,
+              secondComponents.count >= 3 else {
             return false
         }
         
         // Сравниваем RGB компоненты с небольшой погрешностью
         let tolerance: CGFloat = 0.01
-        return abs(components1[0] - components2[0]) < tolerance &&
-               abs(components1[1] - components2[1]) < tolerance &&
-               abs(components1[2] - components2[2]) < tolerance
+        return abs(firstComponents[0] - secondComponents[0]) < tolerance &&
+               abs(firstComponents[1] - secondComponents[1]) < tolerance &&
+               abs(firstComponents[2] - secondComponents[2]) < tolerance
     }
     
     // MARK: - Default Category Setup
