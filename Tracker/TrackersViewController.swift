@@ -1,4 +1,5 @@
 import UIKit
+import CoreData
 
 class TrackersViewController: UIViewController {
 
@@ -34,11 +35,16 @@ class TrackersViewController: UIViewController {
         return collectionView
     }()
 
-    private var trackers: [Tracker] = []
+    // MARK: - Core Data
+    private let trackerStore = TrackerStore()
+    private let categoryStore = TrackerCategoryStore()
+    private let recordStore = TrackerRecordStore()
+    
+    // MARK: - UI State
     private var visibleCategories: [TrackerCategory] = []
-    private var categories: [TrackerCategory] = []
     private var completedTrackers: [TrackerRecord] = []
     private var currentDate: Date
+    private var pendingChanges: [() -> Void] = []
     //let defaultCategory = TrackerCategory(
    //     title: "Общее",
     //    trackers: []
@@ -60,9 +66,54 @@ class TrackersViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         setupUI()
-       // categories = [defaultCategory]
-        setupTestData()
+        setupCoreData()
         reloadData()
+    }
+    
+    private func setupCoreData() {
+        // Подписываемся на изменения в сторах
+        trackerStore.delegate = self
+        
+        // Загружаем данные из Core Data
+        do {
+            try trackerStore.performFetch()
+            try loadCompletedRecords()
+            
+            // Добавляем тестовые данные, если их нет
+            try addTestDataIfNeeded()
+        } catch {
+            print("Ошибка загрузки данных: \(error)")
+        }
+    }
+    
+    private func addTestDataIfNeeded() throws {
+        // Проверяем, есть ли уже данные
+        if trackerStore.numberOfSections > 0 {
+            return
+        }
+        
+        // Создаем тестовую категорию
+        let testCategory = try categoryStore.addCategory(title: "Тестовая категория")
+        
+        // Создаем тестовый трекер
+        let testTracker = Tracker(
+            id: UUID(),
+            title: "Тестовый трекер",
+            color: UIColor(red: 0.0, green: 0.5, blue: 1.0, alpha: 1.0), // Ярко-синий цвет
+            emoji: "🧪",
+            schedule: .weekdays
+        )
+        
+        try trackerStore.addTracker(testTracker, category: testCategory)
+    }
+    
+    private func loadCompletedRecords() throws {
+        let records = try recordStore.fetchAllRecords()
+        completedTrackers = records.compactMap { recordCD in
+            guard let id = recordCD.tracker?.id,
+                  let date = recordCD.date else { return nil }
+            return TrackerRecord(trackerId: id, date: date)
+        }
     }
 
     // MARK: - Actions
@@ -73,46 +124,77 @@ class TrackersViewController: UIViewController {
     @objc private func plusButtonTapped() {
         let addTrackerVC = AddTrackerViewController()
         addTrackerVC.delegate = self
-        addTrackerVC.categories = categories
+        // Загружаем категории из Core Data
+        do {
+            let categoriesCD = try categoryStore.fetchAllCategories()
+            let categories: [TrackerCategory] = categoriesCD.compactMap { categoryCD in
+                guard let title = categoryCD.title else { return nil }
+                return TrackerCategory(title: title, trackers: [])
+            }
+            addTrackerVC.categories = categories
+        } catch {
+            print("Ошибка загрузки категорий: \(error)")
+            addTrackerVC.categories = []
+        }
         present(addTrackerVC, animated: true)
     }
 
     private func applyDateFilter() {
-
         let filterText = (searchBar.text ?? "").lowercased()
         let calendar = Calendar.current
-        let weekdayFromCalendar = calendar.component(
-            .weekday,
-            from: currentDate
-        )
+        let weekdayFromCalendar = calendar.component(.weekday, from: currentDate)
 
         // Преобразуем из календарного формата (1=воскресенье) в наш формат (1=понедельник)
         let filterWeekday: Int
-        if weekdayFromCalendar == 1 {  // воскресенье в календаре
-            filterWeekday = 7  // воскресенье в нашем enum
+        if weekdayFromCalendar == 1 {
+            filterWeekday = 7
         } else {
             filterWeekday = weekdayFromCalendar - 1
         }
 
-        visibleCategories = categories.compactMap { category in
-            let trackers = category.trackers.filter { tracker in
-                let textCondition =
-                    filterText.isEmpty
-                    || tracker.title.lowercased().contains(filterText)
-                guard let schedule = tracker.schedule else { return false }
-                let weekday = Weekday(rawValue: filterWeekday) ?? .mon
-                return schedule.contains(weekday) && textCondition
+        // Обновляем predicate FRC для поиска по названию
+        do {
+            if filterText.isEmpty {
+                try trackerStore.updateFetchPredicate(nil)
+            } else {
+                let predicate = NSPredicate(format: "title CONTAINS[cd] %@", filterText)
+                try trackerStore.updateFetchPredicate(predicate)
             }
-
-            if trackers.isEmpty {
-                return nil
-            }
-
-            return TrackerCategory(
-                title: category.title,
-                trackers: trackers
-            )
+        } catch {
+            print("[applyDateFilter in TrackersViewController]: predicate update error filterText=\(filterText)")
         }
+
+        // Группируем трекеры по категориям из Core Data
+        var categoriesDict: [String: [Tracker]] = [:]
+        
+        for section in 0..<trackerStore.numberOfSections {
+            let sectionTitle = trackerStore.sectionTitle(at: section) ?? "Без категории"
+            
+            for item in 0..<trackerStore.numberOfObjects(in: section) {
+                let indexPath = IndexPath(item: item, section: section)
+                let trackerCD = trackerStore.object(at: indexPath)
+                
+                guard let tracker = trackerStore.tracker(from: trackerCD) else { continue }
+                
+                let textCondition = filterText.isEmpty || tracker.title.lowercased().contains(filterText)
+                guard let schedule = tracker.schedule else { continue }
+                let weekday = Weekday(rawValue: filterWeekday) ?? .mon
+                
+                if schedule.contains(weekday) && textCondition {
+                    if categoriesDict[sectionTitle] == nil {
+                        categoriesDict[sectionTitle] = []
+                    }
+                    categoriesDict[sectionTitle]?.append(tracker)
+                }
+            }
+        }
+        
+        // Преобразуем в массив категорий
+        visibleCategories = categoriesDict.compactMap { (title, trackers) in
+            guard !trackers.isEmpty else { return nil }
+            return TrackerCategory(title: title, trackers: trackers)
+        }.sorted { $0.title < $1.title }
+        
         collectionView.reloadData()
         updatePlaceholderVisibility()
     }
@@ -311,51 +393,6 @@ class TrackersViewController: UIViewController {
         ])
     }
 
-    private func setupTestData() {
-        // Создаем тестовые трекеры
-        let tracker1 = Tracker(
-            id: UUID(),
-            title: "Полить цветы",
-            color: .systemBlue,
-            emoji: "🌱",
-            schedule: .custom([.mon, .wed])
-        )
-
-        let tracker2 = Tracker(
-            id: UUID(),
-            title: "Позвонить маме",
-            color: .systemRed,
-            emoji: "📞",
-            schedule: .weekdays
-        )
-
-        let tracker3 = Tracker(
-            id: UUID(),
-            title: "Позвонить всем",
-            color: .systemRed,
-            emoji: "📞",
-            schedule: .custom([.mon, .wed])
-        )
-
-        trackers = [tracker1, tracker2, tracker3]
-        
-
-        // Создаем тестовые категории
-        let habitCategory = TrackerCategory(
-            title: "Важно",
-            trackers: [tracker1]
-        )
-        let eventCategory = TrackerCategory(
-            title: "После работы",
-            trackers: [tracker2, tracker3]
-        )
-
-        categories = [habitCategory, eventCategory]
-        //categories = []
-
-        // Применяем фильтр для инициализации visibleCategories
-        applyDateFilter()
-    }
 
     private func updatePlaceholderVisibility() {
         let isEmpty = visibleCategories.isEmpty
@@ -366,6 +403,12 @@ class TrackersViewController: UIViewController {
     }
 }
 extension TrackersViewController: UISearchBarDelegate {
+
+    func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
+        // Вызывается при каждом изменении текста в поисковой строке
+        print("Поиск изменен: '\(searchText)'")
+        applyDateFilter()
+    }
 
     func searchBarSearchButtonClicked(_ searchBar: UISearchBar) {
         // Вызывается при нажатии кнопки "Поиск" на клавиатуре
@@ -446,10 +489,20 @@ extension TrackersViewController: TrackerCellDelegate {
         if calendar.isDate(currentDate, inSameDayAs: today)
             || currentDate < today
         {
+            // 1. Обновляем локальный массив
             let trackerRecord = TrackerRecord(trackerId: id, date: currentDate)
             completedTrackers.append(trackerRecord)
+            
+            // 2. Сохраняем в Core Data
+            do {
+                if let trackerCD = try trackerStore.findTracker(by: id) {
+                    try recordStore.addRecord(tracker: trackerCD, date: currentDate)
+                }
+            } catch {
+                print("[completetracker in TrackersViewController]: Core Data save error id=\(id)")
+            }
 
-            // Обновляем только иконку кнопки без перезагрузки ячейки
+            // 3. Обновляем UI
             if let cell = collectionView.cellForItem(at: indexPath)
                 as? TrackerCell
             {
@@ -472,11 +525,19 @@ extension TrackersViewController: TrackerCellDelegate {
         if calendar.isDate(currentDate, inSameDayAs: today)
             || currentDate < today
         {
+            // 1. Удаляем из локального массива
             completedTrackers.removeAll { TrackerRecord in
                 isSameTrackerRecord(trackerRecord: TrackerRecord, id: id)
             }
+            
+            // 2. Удаляем из Core Data
+            do {
+                try recordStore.deleteRecord(trackerId: id, date: currentDate)
+            } catch {
+                print("[uncompleteTracker in TrackersViewController]: Core Data delete error id=\(id)")
+            }
 
-            // Обновляем только иконку кнопки без перезагрузки ячейки
+            // 3. Обновляем UI
             if let cell = collectionView.cellForItem(at: indexPath)
                 as? TrackerCell
             {
@@ -531,32 +592,109 @@ extension TrackersViewController: UICollectionViewDelegateFlowLayout {
         return CGSize(width: collectionView.frame.width, height: 18)
     }
 }
-extension TrackersViewController:
-    AddTrackerViewControllerDelegate
-{
-
+extension TrackersViewController: AddTrackerViewControllerDelegate {
     func didCreateTracker(_ tracker: Tracker, in category: TrackerCategory) {
-        // Находим индекс категории в основном массиве categories
-        if let categoryIndex = categories.firstIndex(where: {
-            $0.title == category.title
-        }) {
-            // Категория существует - добавляем трекер
-            var oldCategory = categories[categoryIndex]
-            let updatedTrackers = oldCategory.trackers + [tracker]
-            let updatedCategory = TrackerCategory(
-                title: oldCategory.title,
-                trackers: updatedTrackers
-            )
-            categories[categoryIndex] = updatedCategory
-        } else {
-            // Категории нет - создаем новую "Общее" с трекером
-            let newCategory = TrackerCategory(
-                title: "Общее",
-                trackers: [tracker]
-            )
-            categories.append(newCategory)
+        // Находим или создаем категорию в Core Data
+        do {
+            let categoryCD = try categoryStore.findOrCreateCategory(title: category.title)
+            try trackerStore.addTracker(tracker, category: categoryCD)
+            // FRC автоматически обновит UI через делегат
+        } catch {
+            print("Ошибка добавления трекера: \(error)")
         }
-        
-        applyDateFilter()
+    }
+}
+
+// MARK: - StoreChangesDelegate
+extension TrackersViewController: StoreChangesDelegate {
+    func storeWillChangeContent() {
+        // Подготавливаемся к батч-обновлениям
+        pendingChanges.removeAll()
+    }
+    
+    func storeDidChangeSection(at sectionIndex: Int, for type: NSFetchedResultsChangeType) {
+        // Сохраняем изменения секций для выполнения в батче
+        switch type {
+        case .insert:
+            pendingChanges.append {
+                self.collectionView.insertSections(IndexSet(integer: sectionIndex))
+            }
+        case .delete:
+            pendingChanges.append {
+                self.collectionView.deleteSections(IndexSet(integer: sectionIndex))
+            }
+        default:
+            break
+        }
+    }
+    
+    func storeDidChangeObject(at indexPath: IndexPath?, for type: NSFetchedResultsChangeType, newIndexPath: IndexPath?) {
+        // Сохраняем изменения объектов для выполнения в батче
+        switch type {
+        case .insert:
+            if let newIndexPath = newIndexPath {
+                pendingChanges.append {
+                    // Проверяем, что секция существует перед вставкой элемента
+                    if newIndexPath.section < self.collectionView.numberOfSections {
+                        self.collectionView.insertItems(at: [newIndexPath])
+                    } else {
+                        // Если секции нет, обновляем данные полностью
+                        self.applyDateFilter()
+                    }
+                }
+            }
+        case .delete:
+            if let indexPath = indexPath {
+                pendingChanges.append {
+                    // Проверяем, что секция и элемент существуют перед удалением
+                    if indexPath.section < self.collectionView.numberOfSections &&
+                       indexPath.item < self.collectionView.numberOfItems(inSection: indexPath.section) {
+                        self.collectionView.deleteItems(at: [indexPath])
+                    } else {
+                        // Если что-то не так, обновляем данные полностью
+                        self.applyDateFilter()
+                    }
+                }
+            }
+        case .update:
+            if let indexPath = indexPath {
+                pendingChanges.append {
+                    // Проверяем, что элемент существует перед обновлением
+                    if indexPath.section < self.collectionView.numberOfSections &&
+                       indexPath.item < self.collectionView.numberOfItems(inSection: indexPath.section) {
+                        self.collectionView.reloadItems(at: [indexPath])
+                    } else {
+                        // Если что-то не так, обновляем данные полностью
+                        self.applyDateFilter()
+                    }
+                }
+            }
+        case .move:
+            if let indexPath = indexPath, let newIndexPath = newIndexPath {
+                pendingChanges.append {
+                    // Проверяем, что оба индекса существуют перед перемещением
+                    if indexPath.section < self.collectionView.numberOfSections &&
+                       indexPath.item < self.collectionView.numberOfItems(inSection: indexPath.section) &&
+                       newIndexPath.section < self.collectionView.numberOfSections &&
+                       newIndexPath.item < self.collectionView.numberOfItems(inSection: newIndexPath.section) {
+                        self.collectionView.moveItem(at: indexPath, to: newIndexPath)
+                    } else {
+                        // Если что-то не так, обновляем данные полностью
+                        self.applyDateFilter()
+                    }
+                }
+            }
+        @unknown default:
+            break
+        }
+    }
+    
+    func storeDidChangeContent() {
+        // Временно используем простой reloadData для тестирования
+        // TODO: Восстановить батч-обновления после отладки
+        DispatchQueue.main.async {
+            self.applyDateFilter()
+        }
+        pendingChanges.removeAll()
     }
 }
