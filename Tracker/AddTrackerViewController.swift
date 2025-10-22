@@ -147,7 +147,7 @@ class AddTrackerViewController: UIViewController {
         // Name TextField
         nameTextField.placeholder = "Введите название трекера"
         nameTextField.borderStyle = .none
-        nameTextField.backgroundColor = .systemGray6
+        nameTextField.backgroundColor = UIColor(hex: "#E6E8EB4D")
         nameTextField.layer.cornerRadius = 16
         nameTextField.delegate = self
         nameTextField.addTarget(
@@ -181,8 +181,8 @@ class AddTrackerViewController: UIViewController {
         categoryButton.translatesAutoresizingMaskIntoConstraints = false
         categoryButton.contentHorizontalAlignment = .fill
         categoryButton.adjustsImageWhenHighlighted = false
-        categoryButton.showsTouchWhenHighlighted = true
-        categoryButton.isEnabled = false
+        categoryButton.showsTouchWhenHighlighted = false
+       // categoryButton.isEnabled = false
 
         // Текст "Категория"
         let categoryTitleLabel = UILabel()
@@ -236,6 +236,8 @@ class AddTrackerViewController: UIViewController {
         scheduleButton.backgroundColor = .clear
         scheduleButton.translatesAutoresizingMaskIntoConstraints = false
         scheduleButton.contentHorizontalAlignment = .fill
+        scheduleButton.adjustsImageWhenHighlighted = false
+        scheduleButton.showsTouchWhenHighlighted = false
 
         // Текст "Расписание"
         let scheduleTitleLabel = UILabel()
@@ -346,7 +348,7 @@ class AddTrackerViewController: UIViewController {
         nameView.addSubview(nameErrorLabel)
 
         // Настраиваем контейнер для опций
-        optionsContainer.backgroundColor = .systemGray6
+        optionsContainer.backgroundColor = UIColor(hex: "#E6E8EB4D")
         optionsContainer.layer.cornerRadius = 16
         optionsContainer.translatesAutoresizingMaskIntoConstraints = false
 
@@ -753,11 +755,9 @@ class AddTrackerViewController: UIViewController {
     }
 
     @objc private func categoryButtonTapped() {
-        print("Category button tapped!")  // Отладочный print
         let categoryVC = CategoryViewController()
-        categoryVC.categories = categories
-        categoryVC.selectedCategory = selectedCategory
         categoryVC.delegate = self
+        categoryVC.selectedCategory = selectedCategory // Передаем выбранную категорию
 
         let navController = UINavigationController(
             rootViewController: categoryVC

@@ -14,7 +14,7 @@ private enum CoreDataKeys {
 }
 
 final class TrackerCategoryStore: NSObject {
-    private let context: NSManagedObjectContext
+    let context: NSManagedObjectContext
     private var numberOfCategories: Int {
         return fetchedResultsController.sections?[0].numberOfObjects ?? 0
     }

@@ -22,3 +22,4 @@ extension StoreChangesDelegate {
     func storeDidChangeObject(at indexPath: IndexPath?, for type: NSFetchedResultsChangeType, newIndexPath: IndexPath?) {}
     func storeDidChangeContent() {}
 }
+
