@@ -37,7 +37,7 @@ final class AddCategoryViewController: UIViewController {
         button.backgroundColor = UIColor(hex: "#AEAFB4") // Серый цвет по умолчанию
         button.layer.cornerRadius = 16
         button.titleLabel?.font = .systemFont(ofSize: 16, weight: .medium)
-        button.addTarget(AddCategoryViewController.self, action: #selector(doneButtonTapped), for: .touchUpInside)
+        button.addTarget(self, action: #selector(doneButtonTapped), for: .touchUpInside)
         button.isEnabled = false // Неактивна по умолчанию
         button.translatesAutoresizingMaskIntoConstraints = false
         return button

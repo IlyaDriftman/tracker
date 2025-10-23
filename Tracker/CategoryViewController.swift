@@ -20,6 +20,11 @@ final class CategoryViewController: UIViewController {
     private let tableView = UITableView()
     private let addCategoryButton = UIButton(type: .system)
     
+    // MARK: - Empty State Elements
+    private let emptyStateView = UIView()
+    private let emptyStateImageView = UIImageView()
+    private let emptyStateLabel = UILabel()
+    
     // MARK: - Editing Properties
     private var currentEditingIndexPath: IndexPath?
     
@@ -54,6 +59,7 @@ final class CategoryViewController: UIViewController {
         viewModel.onCategoriesUpdated = { [weak self] in
             DispatchQueue.main.async {
                 self?.tableView.reloadData()
+                self?.updateEmptyState()
             }
         }
         
@@ -116,8 +122,26 @@ final class CategoryViewController: UIViewController {
         )
         addCategoryButton.translatesAutoresizingMaskIntoConstraints = false
 
+        // Empty State
+        emptyStateView.translatesAutoresizingMaskIntoConstraints = false
+        
+        emptyStateImageView.image = UIImage(named: "1")
+        emptyStateImageView.contentMode = .scaleAspectFit
+        emptyStateImageView.translatesAutoresizingMaskIntoConstraints = false
+        
+        emptyStateLabel.text = "Привычки и события можно\nобъединить по смыслу"
+        emptyStateLabel.font = .systemFont(ofSize: 12)
+        emptyStateLabel.textColor = UIColor(hex: "#1A1B22")
+        emptyStateLabel.textAlignment = .center
+        emptyStateLabel.numberOfLines = 0
+        emptyStateLabel.translatesAutoresizingMaskIntoConstraints = false
+        
+        emptyStateView.addSubview(emptyStateImageView)
+        emptyStateView.addSubview(emptyStateLabel)
+
         view.addSubview(tableView)
         view.addSubview(addCategoryButton)
+        view.addSubview(emptyStateView)
     }
 
     private func setupConstraints() {
@@ -154,9 +178,31 @@ final class CategoryViewController: UIViewController {
                 constant: -20
             ),
             addCategoryButton.heightAnchor.constraint(equalToConstant: 60),
+            
+            // Empty State View - по центру экрана
+            emptyStateView.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            emptyStateView.centerYAnchor.constraint(equalTo: view.centerYAnchor),
+            
+            // Empty State Image - 80x80, отступ 8px снизу от текста
+            emptyStateImageView.centerXAnchor.constraint(equalTo: emptyStateView.centerXAnchor),
+            emptyStateImageView.topAnchor.constraint(equalTo: emptyStateView.topAnchor),
+            emptyStateImageView.widthAnchor.constraint(equalToConstant: 80),
+            emptyStateImageView.heightAnchor.constraint(equalToConstant: 80),
+            
+            // Empty State Label - отступы 16px по бокам, 8px снизу от картинки
+            emptyStateLabel.topAnchor.constraint(equalTo: emptyStateImageView.bottomAnchor, constant: 8),
+            emptyStateLabel.leadingAnchor.constraint(equalTo: emptyStateView.leadingAnchor, constant: 16),
+            emptyStateLabel.trailingAnchor.constraint(equalTo: emptyStateView.trailingAnchor, constant: -16),
+            emptyStateLabel.bottomAnchor.constraint(equalTo: emptyStateView.bottomAnchor),
         ])
     }
 
+    private func updateEmptyState() {
+        let hasCategories = viewModel.numberOfCategories > 0
+        emptyStateView.isHidden = hasCategories
+        tableView.isHidden = !hasCategories
+    }
+    
     @objc private func addCategoryButtonTapped() {
         let addCategoryVC = AddCategoryViewController()
         addCategoryVC.delegate = self

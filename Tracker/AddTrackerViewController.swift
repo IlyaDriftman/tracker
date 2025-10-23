@@ -6,24 +6,9 @@ protocol AddTrackerViewControllerDelegate: AnyObject {
 
 extension AddTrackerViewController: CategoryViewControllerDelegate {
     func didSelectCategory(_ category: TrackerCategory?) {
-        // Если категория выбрана - используем её, иначе оставляем "Общее"
-        if let category = category {
-            selectedCategory = category
-        } else {
-            // Если ничего не выбрано, остается "Общее" по умолчанию
-            selectedCategory = TrackerCategory(title: "Общее", trackers: [])
-        }
-        
-        // Находим textStackView внутри categoryStack
-        if let textStackView = categoryStack.arrangedSubviews.first
-            as? UIStackView,
-            let titleLabel = textStackView.arrangedSubviews.first as? UILabel,
-            let selectedLabel = textStackView.arrangedSubviews.last as? UILabel
-        {
-            titleLabel.text = "Категория"
-            selectedLabel.text = selectedCategory?.title ?? "Общее"
-        }
-        updateCreateButtonState()
+        // Устанавливаем выбранную категорию (может быть nil)
+        selectedCategory = category
+        updateCategoryButtonTitle()
     }
 }
 
@@ -126,7 +111,7 @@ class AddTrackerViewController: UIViewController {
         super.viewDidLoad()
         setupUI()
         setupConstraints()
-        setupDefaultCategory()
+        updateCategoryButtonTitle()
     }
 
     // MARK: - UI Setup
@@ -630,8 +615,11 @@ class AddTrackerViewController: UIViewController {
             return
         }
 
-        // Используем выбранную категорию или категорию по умолчанию
-        let categoryToUse = selectedCategory ?? getDefaultCategory()
+        // Проверяем, что категория выбрана
+        guard let categoryToUse = selectedCategory else {
+            showAlert(title: "Ошибка", message: "Выберите категорию")
+            return
+        }
 
         guard let selectedEmoji = selectedEmoji else {
             showAlert(title: "Ошибка", message: "Выберите эмодзи")
@@ -903,35 +891,19 @@ extension AddTrackerViewController: UICollectionViewDelegateFlowLayout {
                abs(firstComponents[2] - secondComponents[2]) < tolerance
     }
     
-    // MARK: - Default Category Setup
-    private func setupDefaultCategory() {
-        // Всегда устанавливаем "Общее" как категорию по умолчанию
-        selectedCategory = TrackerCategory(title: "Общее", trackers: [])
-        updateCategoryButtonTitle()
-    }
-    
-    private func getDefaultCategory() -> TrackerCategory {
-        // Всегда возвращаем "Общее" - либо существующую, либо создаем новую
-        if let generalCategory = categories.first(where: { $0.title == "Общее" }) {
-            return generalCategory
-        } else {
-            // Если категории "Общее" нет, создаем временную для передачи в delegate
-            return TrackerCategory(title: "Общее", trackers: [])
-        }
-    }
-
     private func updateCategoryButtonTitle() {
-        guard let selectedCategory = selectedCategory else { return }
-
         // Находим textStackView внутри categoryStack
         if let textStackView = categoryStack.arrangedSubviews.first
             as? UIStackView,
             let titleLabel = textStackView.arrangedSubviews.first as? UILabel,
             let selectedLabel = textStackView.arrangedSubviews.last as? UILabel
         {
-
             titleLabel.text = "Категория"
-            selectedLabel.text = selectedCategory.title
+            if let selectedCategory = selectedCategory {
+                selectedLabel.text = selectedCategory.title
+            } else {
+                selectedLabel.text = ""
+            }
         }
         updateCreateButtonState()
     }

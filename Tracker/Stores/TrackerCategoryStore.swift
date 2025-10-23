@@ -75,6 +75,13 @@ final class TrackerCategoryStore: NSObject {
         return try context.fetch(request)
     }
 
+    // Удалить категорию по индексу
+    func deleteCategory(at index: Int) throws {
+        let category = category(at: index)
+        context.delete(category)
+        try context.save()
+    }
+    
     // Найти или создать категорию
     func findOrCreateCategory(title: String) throws -> TrackerCategoryCoreData {
         let request = TrackerCategoryCoreData.fetchRequest()
