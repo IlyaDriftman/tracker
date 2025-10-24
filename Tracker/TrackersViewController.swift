@@ -79,32 +79,23 @@ class TrackersViewController: UIViewController {
             try trackerStore.performFetch()
             try loadCompletedRecords()
             
-            // Добавляем тестовые данные, если их нет
-            try addTestDataIfNeeded()
+            // Удаляем тестовую категорию, если она существует
+            try removeTestCategoryIfExists()
         } catch {
             print("Ошибка загрузки данных: \(error)")
         }
     }
     
-    private func addTestDataIfNeeded() throws {
-        // Проверяем, есть ли уже данные
-        if trackerStore.numberOfSections > 0 {
-            return
+    
+    private func removeTestCategoryIfExists() throws {
+        let categories = try categoryStore.allCategories()
+        for (index, category) in categories.enumerated() {
+            if category.title == "Тестовая категория" {
+                try categoryStore.deleteCategory(at: index)
+                print("Удалена тестовая категория")
+                break
+            }
         }
-        
-        // Создаем тестовую категорию
-        let testCategory = try categoryStore.addCategory(title: "Тестовая категория")
-        
-        // Создаем тестовый трекер
-        let testTracker = Tracker(
-            id: UUID(),
-            title: "Тестовый трекер",
-            color: UIColor(red: 0.0, green: 0.5, blue: 1.0, alpha: 1.0), // Ярко-синий цвет
-            emoji: "🧪",
-            schedule: .weekdays
-        )
-        
-        try trackerStore.addTracker(testTracker, category: testCategory)
     }
     
     private func loadCompletedRecords() throws {
@@ -612,7 +603,7 @@ extension TrackersViewController: StoreChangesDelegate {
         pendingChanges.removeAll()
     }
     
-    func storeDidChangeSection(at sectionIndex: Int, for type: NSFetchedResultsChangeType) {
+    func storeDidChangeSection(at sectionIndex: Int, for type: StoreChangeType) {
         // Сохраняем изменения секций для выполнения в батче
         switch type {
         case .insert:
@@ -628,7 +619,7 @@ extension TrackersViewController: StoreChangesDelegate {
         }
     }
     
-    func storeDidChangeObject(at indexPath: IndexPath?, for type: NSFetchedResultsChangeType, newIndexPath: IndexPath?) {
+    func storeDidChangeObject(at indexPath: IndexPath?, for type: StoreChangeType, newIndexPath: IndexPath?) {
         // Сохраняем изменения объектов для выполнения в батче
         switch type {
         case .insert:

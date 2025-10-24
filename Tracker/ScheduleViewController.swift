@@ -27,7 +27,7 @@ final class ScheduleViewController: UIViewController {
         tableView.dataSource = self
         tableView.register(ScheduleCell.self, forCellReuseIdentifier: "ScheduleCell")
         tableView.separatorStyle = .none
-        tableView.backgroundColor = .systemGray6
+        tableView.backgroundColor = UIColor(hex: "#E6E8EB4D")
         tableView.layer.cornerRadius = 16
         tableView.clipsToBounds = true
         tableView.translatesAutoresizingMaskIntoConstraints = false
