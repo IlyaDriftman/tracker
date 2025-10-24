@@ -14,7 +14,7 @@ final class CategoryViewController: UIViewController {
     var selectedCategory: TrackerCategory? // Выбранная категория для отображения галочки
     
     // MARK: - MVVM Properties
-    private let viewModel: CategoryViewModel
+    private let viewModel: CategoryViewModelProtocol
     
     // MARK: - UI Elements
     private let tableView = UITableView()
@@ -30,7 +30,7 @@ final class CategoryViewController: UIViewController {
     
     
     // MARK: - Initialization
-    init(viewModel: CategoryViewModel = CategoryViewModel()) {
+    init(viewModel: CategoryViewModelProtocol = CategoryViewModel()) {
         self.viewModel = viewModel
         super.init(nibName: nil, bundle: nil)
         setupBindings()
@@ -69,7 +69,7 @@ final class CategoryViewController: UIViewController {
                 // Вызываем делегат при выборе категории
                 if let selectedIndex = selectedIndex {
                     let selectedCategory = self?.viewModel.getCategoryData(for: selectedIndex)
-                    let category = selectedCategory.map { TrackerCategory(title: $0.title, trackers: []) }
+                    let category = selectedCategory
                     self?.delegate?.didSelectCategory(category)
                 }
             }
@@ -389,7 +389,7 @@ extension CategoryViewController: UITableViewDataSource {
         ) as! CategoryCell
         
         // Получаем данные из ViewModel
-        guard let categoryData = viewModel.getCategoryData(for: indexPath.row) else {
+        guard let categoryData = viewModel.getCategoryDataForCell(for: indexPath.row) else {
             return cell
         }
         
@@ -424,19 +424,19 @@ extension CategoryViewController: CategoryViewModelDelegate {
 // MARK: - AddCategoryViewControllerDelegate
 extension CategoryViewController: AddCategoryViewControllerDelegate {
     func didAddCategory(_ categoryTitle: String) {
-        viewModel.addCategory(title: categoryTitle)
+        viewModel.addCategory(categoryTitle)
     }
 }
 
 // MARK: - CategoryCellDelegate
 extension CategoryViewController: CategoryCellDelegate {
     func categoryCellDidRequestEdit(at indexPath: IndexPath) {
-        guard let categoryData = viewModel.getCategoryData(for: indexPath.row) else { return }
+        guard let categoryData = viewModel.getCategoryDataForCell(for: indexPath.row) else { return }
         editCategory(at: indexPath, currentTitle: categoryData.title)
     }
     
     func categoryCellDidRequestDelete(at indexPath: IndexPath) {
-        guard let categoryData = viewModel.getCategoryData(for: indexPath.row) else { return }
+        guard let categoryData = viewModel.getCategoryDataForCell(for: indexPath.row) else { return }
         deleteCategory(at: indexPath, title: categoryData.title)
     }
 }
@@ -461,7 +461,7 @@ class CategoryCell: UITableViewCell {
     override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
         super.init(style: style, reuseIdentifier: reuseIdentifier)
         setupUI()
-        setupContextMenu()
+       // setupContextMenu()
     }
     
     required init?(coder: NSCoder) {
@@ -543,13 +543,6 @@ class CategoryCell: UITableViewCell {
         titleLabel.text = title
         checkmarkImageView.isHidden = !isSelected
         self.indexPath = indexPath
-    }
-    
-    private func setupContextMenu() {
-        if #available(iOS 13.0, *) {
-            let contextMenu = UIContextMenuInteraction(delegate: self)
-            addInteraction(contextMenu)
-        }
     }
 }
 

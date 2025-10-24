@@ -10,18 +10,19 @@ import UIKit
 class OnboardingPageViewController: UIViewController {
     
     // MARK: - Properties
-    var backgroundImageName: String = "bg1"
-    var titleText: String = "Добро пожаловать!"
-    var buttonText: String = "Вот это технологии!"
+    private var pageModel: PageModel?
     var currentPageIndex: Int = 0
     var totalPages: Int = 2
     
     weak var pageControlDelegate: PageControlDelegate?
     
+    // MARK: - Callbacks
+    var onButtonTapped: (() -> Void)?
+    
     // MARK: - UI Elements
-    lazy var backgroundImage: UIImageView = {
+    private lazy var backgroundImage: UIImageView = {
         let backgroundImg = UIImageView()
-        backgroundImg.image = UIImage(named: backgroundImageName)
+        backgroundImg.image = pageModel?.image
         backgroundImg.contentMode = .scaleAspectFill
         backgroundImg.translatesAutoresizingMaskIntoConstraints = false
         return backgroundImg
@@ -105,21 +106,15 @@ class OnboardingPageViewController: UIViewController {
     }
     
     private func updateContent() {
-        titleLabel.text = titleText
-        continueButton.setTitle(buttonText, for: .normal)
-        backgroundImage.image = UIImage(named: backgroundImageName)
+        titleLabel.text = pageModel?.text
+        continueButton.setTitle(pageModel?.buttonText, for: .normal)
+        backgroundImage.image = pageModel?.image
         pageControl.currentPage = currentPageIndex
     }
     
     // MARK: - Public Methods
-    func configure(backgroundImageName: String, 
-                  titleText: String, 
-                  buttonText: String, 
-                  currentPageIndex: Int, 
-                  totalPages: Int) {
-        self.backgroundImageName = backgroundImageName
-        self.titleText = titleText
-        self.buttonText = buttonText
+    func configure(pageModel: PageModel, currentPageIndex: Int, totalPages: Int) {
+        self.pageModel = pageModel
         self.currentPageIndex = currentPageIndex
         self.totalPages = totalPages
         
@@ -131,22 +126,7 @@ class OnboardingPageViewController: UIViewController {
     
     // MARK: - Actions
     @objc func buttonTapped() {
-        UserDefaults.standard.set(true, forKey: "hasSeenOnboarding")
-        
-        guard let windowScene = view.window?.windowScene else { return }
-        
-        let mainVC = TrackersViewController()
-        let navController = UINavigationController(rootViewController: mainVC)
-        
-        // Создаём новое окно и назначаем rootViewController
-        let window = UIWindow(windowScene: windowScene)
-        window.rootViewController = navController
-        window.makeKeyAndVisible()
-        
-        // Заменяем текущее окно в SceneDelegate
-        if let sceneDelegate = windowScene.delegate as? SceneDelegate {
-            sceneDelegate.window = window
-        }
+        onButtonTapped?()
     }
     
     @objc func pageControlTapped(_ sender: UIPageControl) {

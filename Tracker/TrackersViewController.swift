@@ -603,7 +603,7 @@ extension TrackersViewController: StoreChangesDelegate {
         pendingChanges.removeAll()
     }
     
-    func storeDidChangeSection(at sectionIndex: Int, for type: NSFetchedResultsChangeType) {
+    func storeDidChangeSection(at sectionIndex: Int, for type: StoreChangeType) {
         // Сохраняем изменения секций для выполнения в батче
         switch type {
         case .insert:
@@ -619,7 +619,7 @@ extension TrackersViewController: StoreChangesDelegate {
         }
     }
     
-    func storeDidChangeObject(at indexPath: IndexPath?, for type: NSFetchedResultsChangeType, newIndexPath: IndexPath?) {
+    func storeDidChangeObject(at indexPath: IndexPath?, for type: StoreChangeType, newIndexPath: IndexPath?) {
         // Сохраняем изменения объектов для выполнения в батче
         switch type {
         case .insert:

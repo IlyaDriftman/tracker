@@ -1,11 +1,3 @@
-//
-//  OnboardingViewController.swift
-//  Tracker
-//
-//  Created by Илья on 19.10.2025.
-//
-
-//
 //  OnboardingViewController.swift
 //  UIPageViewController
 //
@@ -26,18 +18,14 @@ class OnboardingViewController: UIPageViewController {
     private let pages: [OnboardingPageViewController] = {
         let page1 = OnboardingPageViewController()
         page1.configure(
-            backgroundImageName: "bg1",
-            titleText: "Отслеживайте только\n то, что хотите",
-            buttonText: "Вот это технологии!",
+            pageModel: .aboutTracking,
             currentPageIndex: 0,
             totalPages: 2
         )
         
         let page2 = OnboardingPageViewController()
         page2.configure(
-            backgroundImageName: "bg2",
-            titleText: "Даже если это\n не литры воды и йога",
-            buttonText: "Вот это технологии!",
+            pageModel: .aboutWaterAndYoga,
             currentPageIndex: 1,
             totalPages: 2
         )
@@ -47,6 +35,9 @@ class OnboardingViewController: UIPageViewController {
     
     // MARK: - PageControlDelegate
     weak var pageControlDelegate: PageControlDelegate?
+    
+    // MARK: - Callbacks
+    var onOnboardingCompleted: (() -> Void)?
     
     // MARK: - Lifecycle
     override func viewDidLoad() {
@@ -59,9 +50,12 @@ class OnboardingViewController: UIPageViewController {
         dataSource = self
         delegate = self
         
-        // Устанавливаем делегат для каждой страницы
+        // Устанавливаем делегат и замыкание для каждой страницы
         for page in pages {
             page.pageControlDelegate = self
+            page.onButtonTapped = { [weak self] in
+                self?.onOnboardingCompleted?()
+            }
         }
         
         if let first = pages.first {

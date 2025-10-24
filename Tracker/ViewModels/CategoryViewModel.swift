@@ -6,15 +6,40 @@
 //
 
 import Foundation
-import CoreData
+
 
 // MARK: - CategoryViewModelDelegate
 protocol CategoryViewModelDelegate: AnyObject {
     func didSelectCategory(_ category: TrackerCategory?)
 }
 
+// MARK: - CategoryViewModelProtocol
+protocol CategoryViewModelProtocol: AnyObject {
+    // MARK: - Properties
+    var delegate: CategoryViewModelDelegate? { get set }
+    
+    // MARK: - Bindings
+    var onCategoriesUpdated: (() -> Void)? { get set }
+    var onSelectionChanged: ((Int?) -> Void)? { get set }
+    var onError: ((String) -> Void)? { get set }
+    
+    // MARK: - Computed Properties
+    var numberOfCategories: Int { get }
+    var selectedCategory: TrackerCategory? { get }
+    
+    // MARK: - Public Methods
+    func loadCategories()
+    func getCategoryData(for index: Int) -> TrackerCategory?
+    func getCategoryDataForCell(for index: Int) -> (title: String, isSelected: Bool)?
+    func selectCategory(at index: Int)
+    func addCategory(_ title: String)
+    func updateCategory(at index: Int, newTitle: String)
+    func deleteCategory(at index: Int)
+    func setSelectedCategory(_ category: TrackerCategory?)
+}
+
 // MARK: - CategoryViewModel
-final class CategoryViewModel {
+final class CategoryViewModel: CategoryViewModelProtocol {
     
     // MARK: - Properties
     private let categoryStore: TrackerCategoryStore
@@ -54,21 +79,24 @@ final class CategoryViewModel {
         do {
             // Используем NSFetchedResultsController для получения данных
             let categoriesCD = categoryStore.allCategories()
-            print("DEBUG: Загружено категорий из Core Data: \(categoriesCD.count)")
             categories = categoriesCD.compactMap { categoryCD in
                 guard let title = categoryCD.title else { return nil }
                 return TrackerCategory(title: title, trackers: [])
             }
-            print("DEBUG: Обработано категорий: \(categories.count)")
             onCategoriesUpdated?()
         } catch {
-            print("DEBUG: Ошибка загрузки категорий: \(error)")
             onError?("Ошибка загрузки категорий: \(error.localizedDescription)")
         }
     }
     
     /// Получить данные для ячейки по индексу
-    func getCategoryData(for index: Int) -> (title: String, isSelected: Bool)? {
+    func getCategoryData(for index: Int) -> TrackerCategory? {
+        guard index < categories.count else { return nil }
+        return categories[index]
+    }
+    
+    /// Получить данные для ячейки по индексу (старый метод для совместимости)
+    func getCategoryDataForCell(for index: Int) -> (title: String, isSelected: Bool)? {
         guard index < categories.count else { return nil }
         let category = categories[index]
         let isSelected = selectedCategoryIndex == index
@@ -114,7 +142,7 @@ final class CategoryViewModel {
     }
     
     /// Добавить новую категорию
-    func addCategory(title: String) {
+    func addCategory(_ title: String) {
         do {
             _ = try categoryStore.addCategory(title: title)
             // Данные обновятся через NSFetchedResultsController
@@ -171,13 +199,12 @@ extension CategoryViewModel: StoreChangesDelegate {
         // Можно добавить анимацию загрузки
     }
     
-    func storeDidChangeSection(at sectionIndex: Int, for type: NSFetchedResultsChangeType) {
+    func storeDidChangeSection(at sectionIndex: Int, for type: StoreChangeType) {
         // Обработка изменений секций (если понадобится)
     }
     
-    func storeDidChangeObject(at indexPath: IndexPath?, for type: NSFetchedResultsChangeType, newIndexPath: IndexPath?) {
+    func storeDidChangeObject(at indexPath: IndexPath?, for type: StoreChangeType, newIndexPath: IndexPath?) {
         // Обновляем данные при изменениях в Core Data
-        print("DEBUG: StoreDidChangeObject - type: \(type), indexPath: \(String(describing: indexPath)), newIndexPath: \(String(describing: newIndexPath))")
         loadCategories()
     }
     

@@ -14,9 +14,9 @@
             filePath = "Tracker/AddTrackerViewController.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "840"
-            endingLineNumber = "840"
-            landmarkName = "collectionView(_:didSelectItemAt:)"
+            startingLineNumber = "841"
+            endingLineNumber = "841"
+            landmarkName = "areColorsEqual(_:_:)"
             landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>

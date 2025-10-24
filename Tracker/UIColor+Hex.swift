@@ -26,7 +26,6 @@ extension UIColor {
         var hexNumber: UInt64 = 0
 
         guard scanner.scanHexInt64(&hexNumber) else {
-            print("DEBUG: Не удалось распарсить hex: '\(hexString)'")
             return nil
         }
 
@@ -49,15 +48,9 @@ extension UIColor {
             a = CGFloat(hexNumber & 0x0000_00FF) / 255.0
 
         default:
-            print(
-                "DEBUG: Неподдерживаемая длина hex: '\(hexString)' (чистая длина: \(cleanHexString.count))"
-            )
             return nil
         }
 
-        print(
-            "DEBUG: Создаем UIColor из hex '\(hexString)' -> RGB(\(r), \(g), \(b), \(a))"
-        )
         self.init(red: r, green: g, blue: b, alpha: a)
     }
 
@@ -67,7 +60,6 @@ extension UIColor {
         let rgbColor = self.converted(to: CGColorSpaceCreateDeviceRGB())
 
         guard let components = rgbColor.components, components.count >= 3 else {
-            print("DEBUG: Не удалось получить компоненты цвета для \(self)")
             return "#000000"
         }
 

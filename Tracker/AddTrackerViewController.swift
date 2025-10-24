@@ -45,40 +45,8 @@ class AddTrackerViewController: UIViewController {
     private var selectedColor: UIColor?
     private let heightHeader: CGFloat = 18
 
-    let emojis = [
-        "🌱", "💧", "🏃‍♂️", "📚", "🍎", "💪", "🎯", "🌟", "🔥",
-        "💡", "🎨", "🎵", "⚽", "🎮", "🎭", "🎪", "🚴‍♂️", "🧘‍♀️",
-    ]
-
-    private let colors: [(String, UIColor)] = [
-        ("Красный", UIColor(red: 0.961, green: 0.420, blue: 0.424, alpha: 1.0)),  // #F56B6C
-        (
-            "Оранжевый",
-            UIColor(red: 0.992, green: 0.584, blue: 0.318, alpha: 1.0)
-        ),  // #FD9531
-        ("Желтый", UIColor(red: 0.996, green: 0.769, blue: 0.318, alpha: 1.0)),  // #FEC451
-        ("Зеленый", UIColor(red: 0.459, green: 0.820, blue: 0.408, alpha: 1.0)),  // #75D168
-        ("Голубой", UIColor(red: 0.318, green: 0.737, blue: 0.996, alpha: 1.0)),  // #51BCFE
-        ("Синий", UIColor(red: 0.216, green: 0.447, blue: 0.906, alpha: 1.0)),  // #3772E7
-        (
-            "Фиолетовый",
-            UIColor(red: 0.584, green: 0.318, blue: 0.996, alpha: 1.0)
-        ),  // #9551FE
-        ("Розовый", UIColor(red: 0.996, green: 0.318, blue: 0.737, alpha: 1.0)),  // #FE51BC
-        (
-            "Коричневый",
-            UIColor(red: 0.584, green: 0.318, blue: 0.216, alpha: 1.0)
-        ),  // #955135
-        ("Серый", UIColor(red: 0.682, green: 0.686, blue: 0.706, alpha: 1.0)),  // #AEAFB4
-        ("Черный", UIColor(red: 0.102, green: 0.106, blue: 0.133, alpha: 1.0)),  // #1A1B22
-        ("Лавандовый", UIColor(red: 0.694, green: 0.612, blue: 0.851, alpha: 1.0)),  // #B19CD9
-        ("Темно-зеленый", UIColor(red: 0.0, green: 0.5, blue: 0.0, alpha: 1.0)),
-        ("Темно-синий", UIColor(red: 0.0, green: 0.0, blue: 0.5, alpha: 1.0)),
-        ("Золотой", UIColor(red: 1.0, green: 0.84, blue: 0.0, alpha: 1.0)),
-        ("Серебряный", UIColor(red: 0.75, green: 0.75, blue: 0.75, alpha: 1.0)),
-        ("Бирюзовый", UIColor(red: 0.0, green: 0.8, blue: 0.8, alpha: 1.0)),
-        ("Лавандовый", UIColor(red: 0.9, green: 0.9, blue: 0.98, alpha: 1.0)),
-    ]
+    private let emojis = AppConstants.emojis
+    private let colors = AppConstants.colors
     // private var selectedCategory: String?
 
     // MARK: - Initialization
@@ -640,7 +608,6 @@ class AddTrackerViewController: UIViewController {
             schedule: selectedWeekdays.isEmpty ? nil : .custom(selectedWeekdays)
         )
 
-        print("DEBUG: Создаем трекер с цветом: \(selectedColor)")
         print("Created tracker: \(newTracker)")
         delegate?.didCreateTracker(newTracker, in: categoryToUse)
         dismiss(animated: true)
@@ -783,9 +750,9 @@ extension AddTrackerViewController: UICollectionViewDataSource {
             let isSelected = emoji == selectedEmoji
             cell.configureEmoji(with: emoji, isSelected: isSelected)
         } else {
-            let colorData = colors[indexPath.item]
-            let isSelected = areColorsEqual(colorData.1, selectedColor)
-            cell.configureColor(with: colorData.1, isSelected: isSelected)
+            let color = colors[indexPath.item]
+            let isSelected = areColorsEqual(color, selectedColor)
+            cell.configureColor(with: color, isSelected: isSelected)
         }
 
         return cell
@@ -824,8 +791,8 @@ extension AddTrackerViewController: UICollectionViewDelegate {
             selectedEmoji = emojis[indexPath.item]
         } else {
             // Цвета секция
-            let colorData = colors[indexPath.item]
-            selectedColor = colorData.1
+            let color = colors[indexPath.item]
+            selectedColor = color
         }
 
         collectionView.reloadData()
@@ -899,11 +866,7 @@ extension AddTrackerViewController: UICollectionViewDelegateFlowLayout {
             let selectedLabel = textStackView.arrangedSubviews.last as? UILabel
         {
             titleLabel.text = "Категория"
-            if let selectedCategory = selectedCategory {
-                selectedLabel.text = selectedCategory.title
-            } else {
-                selectedLabel.text = ""
-            }
+            selectedLabel.text = selectedCategory?.title
         }
         updateCreateButtonState()
     }

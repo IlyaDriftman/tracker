@@ -12,16 +12,46 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         guard let windowScene = scene as? UIWindowScene else { return }
         window = UIWindow(windowScene: windowScene)
 
-        let hasSeenOnboarding = UserDefaults.standard.bool(forKey: "hasSeenOnboarding")
-
-        if hasSeenOnboarding {
-            let mainVC = TrackersViewController()
-            let navController = UINavigationController(rootViewController: mainVC)
-            window?.rootViewController = navController
+        if !SettingsManager.shared.shouldShowOnboarding {
+            showMainInterface()
         } else {
-            window?.rootViewController = OnboardingViewController()
+            let onboardingVC = OnboardingViewController()
+            onboardingVC.onOnboardingCompleted = { [weak self] in
+                self?.showMainInterface()
+            }
+            window?.rootViewController = onboardingVC
         }
 
         window?.makeKeyAndVisible()
+    }
+    
+    // MARK: - Private Methods
+    private func showMainInterface() {
+        SettingsManager.shared.hasSeenOnboarding = true
+        
+        let tabBarController = UITabBarController()
+        
+        // Первая вкладка - Трекеры
+        let trackersVC = TrackersViewController()
+        let trackersNavController = UINavigationController(rootViewController: trackersVC)
+        trackersNavController.tabBarItem = UITabBarItem(
+            title: "",
+            image: UIImage(named: "trackertab"),
+            selectedImage: UIImage(named: "trackertab")
+        )
+        
+        // Вторая вкладка - Статистика (пока пустая)
+        let statsVC = UIViewController()
+        statsVC.view.backgroundColor = .systemBackground
+        statsVC.title = "Статистика"
+        let statsNavController = UINavigationController(rootViewController: statsVC)
+        statsNavController.tabBarItem = UITabBarItem(
+            title: "",
+            image: UIImage(named: "statistictab"),
+            selectedImage: UIImage(named: "statistictab")
+        )
+        
+        tabBarController.viewControllers = [trackersNavController, statsNavController]
+        window?.rootViewController = tabBarController
     }
 }

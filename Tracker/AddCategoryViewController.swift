@@ -21,7 +21,7 @@ final class AddCategoryViewController: UIViewController {
     private let textField: UITextField = {
         let textField = PaddedTextField()
         textField.placeholder = "Введите название категории"
-        textField.borderStyle = .none // Убираем бордеры
+        textField.borderStyle = .none
         textField.font = .systemFont(ofSize: 17)
         textField.backgroundColor = UIColor(hex: "#E6E8EB4D")
         textField.layer.cornerRadius = 16
@@ -30,15 +30,15 @@ final class AddCategoryViewController: UIViewController {
         return textField
     }()
     
-    private let doneButton: UIButton = {
+    private lazy var doneButton: UIButton = {
         let button = UIButton(type: .system)
         button.setTitle("Готово", for: .normal)
         button.setTitleColor(.white, for: .normal)
-        button.backgroundColor = UIColor(hex: "#AEAFB4") // Серый цвет по умолчанию
+        button.backgroundColor = UIColor(resource: .defaultGrey)
         button.layer.cornerRadius = 16
         button.titleLabel?.font = .systemFont(ofSize: 16, weight: .medium)
         button.addTarget(self, action: #selector(doneButtonTapped), for: .touchUpInside)
-        button.isEnabled = false // Неактивна по умолчанию
+        button.isEnabled = false
         button.translatesAutoresizingMaskIntoConstraints = false
         return button
     }()
@@ -99,9 +99,9 @@ final class AddCategoryViewController: UIViewController {
     private func updateDoneButtonState(isEnabled: Bool) {
         doneButton.isEnabled = isEnabled
         if isEnabled {
-            doneButton.backgroundColor = UIColor(named: "trackerBlack")
+            doneButton.backgroundColor = UIColor(resource: .trackerBlack)
         } else {
-            doneButton.backgroundColor = UIColor(hex: "#AEAFB4")
+            doneButton.backgroundColor = UIColor(resource: .defaultGrey)
         }
     }
     
