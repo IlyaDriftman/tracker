@@ -6,19 +6,27 @@
 //
 
 import Foundation
-import CoreData
+
+// MARK: - Store Change Types
+enum StoreChangeType {
+    case insert
+    case delete
+    case move
+    case update
+}
 
 protocol StoreChangesDelegate: AnyObject {
     func storeWillChangeContent()
-    func storeDidChangeSection(at sectionIndex: Int, for type: NSFetchedResultsChangeType)
-    func storeDidChangeObject(at indexPath: IndexPath?, for type: NSFetchedResultsChangeType, newIndexPath: IndexPath?)
+    func storeDidChangeSection(at sectionIndex: Int, for type: StoreChangeType)
+    func storeDidChangeObject(at indexPath: IndexPath?, for type: StoreChangeType, newIndexPath: IndexPath?)
     func storeDidChangeContent()
 }
 
 // Опционально: дефолтные пустые реализации, чтобы не заставлять реализовывать всё
 extension StoreChangesDelegate {
     func storeWillChangeContent() {}
-    func storeDidChangeSection(at sectionIndex: Int, for type: NSFetchedResultsChangeType) {}
-    func storeDidChangeObject(at indexPath: IndexPath?, for type: NSFetchedResultsChangeType, newIndexPath: IndexPath?) {}
+    func storeDidChangeSection(at sectionIndex: Int, for type: StoreChangeType) {}
+    func storeDidChangeObject(at indexPath: IndexPath?, for type: StoreChangeType, newIndexPath: IndexPath?) {}
     func storeDidChangeContent() {}
 }
+

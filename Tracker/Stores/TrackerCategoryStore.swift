@@ -14,7 +14,7 @@ private enum CoreDataKeys {
 }
 
 final class TrackerCategoryStore: NSObject {
-    private let context: NSManagedObjectContext
+    let context: NSManagedObjectContext
     private var numberOfCategories: Int {
         return fetchedResultsController.sections?[0].numberOfObjects ?? 0
     }
@@ -75,6 +75,13 @@ final class TrackerCategoryStore: NSObject {
         return try context.fetch(request)
     }
 
+    // Удалить категорию по индексу
+    func deleteCategory(at index: Int) throws {
+        let category = category(at: index)
+        context.delete(category)
+        try context.save()
+    }
+    
     // Найти или создать категорию
     func findOrCreateCategory(title: String) throws -> TrackerCategoryCoreData {
         let request = TrackerCategoryCoreData.fetchRequest()
@@ -90,6 +97,25 @@ final class TrackerCategoryStore: NSObject {
     }
 }
 
+// MARK: - Private Helpers
+private extension TrackerCategoryStore {
+    func convertChangeType(_ type: NSFetchedResultsChangeType) -> StoreChangeType {
+        switch type {
+        case .insert:
+            return .insert
+        case .delete:
+            return .delete
+        case .move:
+            return .move
+        case .update:
+            return .update
+        @unknown default:
+            return .update
+        }
+    }
+}
+
+// MARK: - NSFetchedResultsControllerDelegate
 extension TrackerCategoryStore: NSFetchedResultsControllerDelegate {
     func controllerWillChangeContent(
         _ controller: NSFetchedResultsController<NSFetchRequestResult>
@@ -103,7 +129,8 @@ extension TrackerCategoryStore: NSFetchedResultsControllerDelegate {
         atSectionIndex sectionIndex: Int,
         for type: NSFetchedResultsChangeType
     ) {
-        delegate?.storeDidChangeSection(at: sectionIndex, for: type)
+        let storeChangeType = convertChangeType(type)
+        delegate?.storeDidChangeSection(at: sectionIndex, for: storeChangeType)
     }
 
     func controller(
@@ -113,9 +140,10 @@ extension TrackerCategoryStore: NSFetchedResultsControllerDelegate {
         for type: NSFetchedResultsChangeType,
         newIndexPath: IndexPath?
     ) {
+        let storeChangeType = convertChangeType(type)
         delegate?.storeDidChangeObject(
             at: indexPath,
-            for: type,
+            for: storeChangeType,
             newIndexPath: newIndexPath
         )
     }

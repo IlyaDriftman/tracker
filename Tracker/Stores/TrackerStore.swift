@@ -142,6 +142,24 @@ final class TrackerStore: NSObject {
     }
 }
 
+// MARK: - Private Helpers
+private extension TrackerStore {
+    func convertChangeType(_ type: NSFetchedResultsChangeType) -> StoreChangeType {
+        switch type {
+        case .insert:
+            return .insert
+        case .delete:
+            return .delete
+        case .move:
+            return .move
+        case .update:
+            return .update
+        @unknown default:
+            return .update
+        }
+    }
+}
+
 // MARK: - NSFetchedResultsControllerDelegate
 extension TrackerStore: NSFetchedResultsControllerDelegate {
     func controllerWillChangeContent(
@@ -156,7 +174,8 @@ extension TrackerStore: NSFetchedResultsControllerDelegate {
         atSectionIndex sectionIndex: Int,
         for type: NSFetchedResultsChangeType
     ) {
-        delegate?.storeDidChangeSection(at: sectionIndex, for: type)
+        let storeChangeType = convertChangeType(type)
+        delegate?.storeDidChangeSection(at: sectionIndex, for: storeChangeType)
     }
 
     func controller(
@@ -166,9 +185,10 @@ extension TrackerStore: NSFetchedResultsControllerDelegate {
         for type: NSFetchedResultsChangeType,
         newIndexPath: IndexPath?
     ) {
+        let storeChangeType = convertChangeType(type)
         delegate?.storeDidChangeObject(
             at: indexPath,
-            for: type,
+            for: storeChangeType,
             newIndexPath: newIndexPath
         )
     }

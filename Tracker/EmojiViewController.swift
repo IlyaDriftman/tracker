@@ -12,7 +12,7 @@ class EmojiViewController: UIViewController {
     private let collectionView: UICollectionView
     private let doneButton = UIButton(type: .system)
     
-    private let emojis = ["🌱", "💧", "🏃‍♂️", "📚", "🍎", "💪", "🎯", "🌟", "🔥", "💡", "🎨", "🎵"]
+    private let emojis = AppConstants.emojis
     
     override init(nibName nibNameOrNil: String?, bundle nibBundleOrNil: Bundle?) {
         let layout = UICollectionViewFlowLayout()
