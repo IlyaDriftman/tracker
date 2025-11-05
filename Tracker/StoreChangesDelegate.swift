@@ -20,6 +20,9 @@ protocol StoreChangesDelegate: AnyObject {
     func storeDidChangeSection(at sectionIndex: Int, for type: StoreChangeType)
     func storeDidChangeObject(at indexPath: IndexPath?, for type: StoreChangeType, newIndexPath: IndexPath?)
     func storeDidChangeContent()
+    
+    // Новый метод для уведомления о завершённых трекерах
+    func trackerRecordsDidUpdate()
 }
 
 // Опционально: дефолтные пустые реализации, чтобы не заставлять реализовывать всё

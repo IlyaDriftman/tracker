@@ -28,4 +28,5 @@ struct Tracker {
     let color: UIColor
     let emoji: String
     let schedule: Schedule?   // nil → нерегулярное событие
+    let isPinned: Bool
 }

@@ -10,6 +10,8 @@ final class AppDelegate: UIResponder, UIApplicationDelegate {
             .LaunchOptionsKey: Any]?
     ) -> Bool {
         // Override point for customization after application launch.
+        AnalyticsService.activate()
+
         return true
     }
 
