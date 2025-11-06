@@ -93,6 +93,7 @@ class TrackersViewController: AnalyticsViewController {
         configureSearchBarColors()
     }
     
+    
     private func setupCoreData() {
         // Подписываемся на изменения в сторах
         trackerStore.delegate = self
@@ -525,7 +526,7 @@ class TrackersViewController: AnalyticsViewController {
             ),
 
             // Content View
-            contentView.topAnchor.constraint(equalTo: searchBar.bottomAnchor),
+            contentView.topAnchor.constraint(equalTo: searchBar.bottomAnchor, constant: 24),
             contentView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             contentView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
             contentView.bottomAnchor.constraint(
