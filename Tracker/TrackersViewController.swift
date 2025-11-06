@@ -354,8 +354,13 @@ class TrackersViewController: AnalyticsViewController {
         // Date picker
         let datePicker = UIDatePicker()
         datePicker.backgroundColor = colors.bgDatePicker
+        //datePicker.tintColor = colors.labelDatePicker
         datePicker.layer.cornerRadius = 8
         datePicker.layer.masksToBounds = true
+        NSLayoutConstraint.activate([
+                datePicker.widthAnchor.constraint(equalToConstant: 100)
+            ])
+       
         
         // Принудительно используем светлую тему для datePicker, чтобы текст был черным
         datePicker.overrideUserInterfaceStyle = .light
@@ -511,7 +516,7 @@ class TrackersViewController: AnalyticsViewController {
                 equalTo: view.trailingAnchor,
                 constant: -16
             ),
-
+            
             // Search Bar
             searchBar.topAnchor.constraint(
                 equalTo: titleLabel.bottomAnchor,
