@@ -9,4 +9,9 @@
 "trackers" = "Trackers";
 "statistics" = "Statistics";
 "search" = "Search";
-"filters" = "Filters"; 
+"filters" = "Filters";
+"pinned" = "Pinned";
+"pin" = "Pin";
+"unpin" = "Unpin";
+"edit" = "Edit";
+"delete" = "Delete";

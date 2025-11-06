@@ -12,6 +12,7 @@ protocol TrackerCellContextMenuDelegate: AnyObject {
 }
 
 class TrackerCell: UICollectionViewCell {
+    
 
     // MARK: - UI Elements
     private let emojiView = UIView()
@@ -31,6 +32,11 @@ class TrackerCell: UICollectionViewCell {
 
     weak var delegate: TrackerCellDelegate?
     weak var contextMenuDelegate: TrackerCellContextMenuDelegate?
+    
+    private let labelPin = NSLocalizedString("pin", comment: "label Pin")
+    private let labelUnpin = NSLocalizedString("unpin", comment: "label UnPin")
+    private let labelEdit = NSLocalizedString("edit", comment: "label Edit")
+    private let labelDelete = NSLocalizedString("delete", comment: "label Dell")
 
     // MARK: - Init
     override init(frame: CGRect) {
@@ -287,21 +293,21 @@ extension TrackerCell: UIContextMenuInteractionDelegate {
             guard let self = self else { return nil }
             
             // Первый пункт: Закрепить/Открепить
-            let pinTitle = tracker.isPinned ? "Открепить" : "Закрепить"
+            let pinTitle = tracker.isPinned ? labelUnpin : labelPin
             let pinAction = UIAction(title: pinTitle) { _ in
                 AnalyticsService.click(screen: .main, item: tracker.isPinned ? .unpin : .pin)
                 self.contextMenuDelegate?.trackerCellDidRequestPin(at: indexPath)
             }
             
             // Второй пункт: Редактировать
-            let editAction = UIAction(title: "Редактировать") { _ in
+            let editAction = UIAction(title: labelEdit) { _ in
                 AnalyticsService.click(screen: .main, item: .edit)
                 self.contextMenuDelegate?.trackerCellDidRequestEdit(at: indexPath)
             }
             
             // Третий пункт: Удалить (красным цветом)
             let deleteAction = UIAction(
-                title: "Удалить",
+                title: labelDelete,
                 attributes: .destructive
             ) { _ in
                 AnalyticsService.click(screen: .main, item: .delete)

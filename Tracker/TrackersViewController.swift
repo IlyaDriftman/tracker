@@ -18,7 +18,8 @@ class TrackersViewController: AnalyticsViewController {
     private let filtersButton = UIButton(type: .system)
     let colors = MyColor()
     private let labelSearch = NSLocalizedString("search", comment: "label Search")
-    private let labelFilter = NSLocalizedString("filters", comment: "label Search")
+    private let labelFilter = NSLocalizedString("filters", comment: "label Filter")
+    private let labelPinned = NSLocalizedString("pinned", comment: "label Pinned")
 
     // MARK: - Properties
     var datePicker: UIDatePicker?
@@ -252,7 +253,7 @@ class TrackersViewController: AnalyticsViewController {
         
         // Добавляем секцию "Закрепленные" если есть закрепленные трекеры
         if !pinnedTrackers.isEmpty {
-            resultCategories.append(TrackerCategory(title: "Закрепленные", trackers: pinnedTrackers))
+            resultCategories.append(TrackerCategory(title: labelPinned, trackers: pinnedTrackers))
         }
         
         // Добавляем остальные категории отсортированные по названию
