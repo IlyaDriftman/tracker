@@ -11,7 +11,7 @@ protocol AddCategoryViewControllerDelegate: AnyObject {
     func didAddCategory(_ categoryTitle: String)
 }
 
-final class AddCategoryViewController: UIViewController {
+final class AddCategoryViewController: AnalyticsViewController {
     
     // MARK: - Properties
     weak var delegate: AddCategoryViewControllerDelegate?
@@ -46,6 +46,7 @@ final class AddCategoryViewController: UIViewController {
     // MARK: - Lifecycle
     override func viewDidLoad() {
         super.viewDidLoad()
+        analyticsScreenName = .addCategory
         setupUI()
         setupConstraints()
         setupKeyboardHandling()
@@ -122,11 +123,6 @@ final class AddCategoryViewController: UIViewController {
     }
     
     // MARK: - Helper Methods
-    private func showAlert(title: String, message: String) {
-        let alert = UIAlertController(title: title, message: message, preferredStyle: .alert)
-        alert.addAction(UIAlertAction(title: "OK", style: .default))
-        present(alert, animated: true)
-    }
 }
 
 // MARK: - PaddedTextField

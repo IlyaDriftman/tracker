@@ -82,11 +82,6 @@ final class TrackerStore: NSObject {
 
         let color = UIColor(hex: colorHex) ?? .black
 
-        // Отладочная информация
-        print(
-            "DEBUG: Загружаем трекер '\(title)' с цветом hex: '\(colorHex)' -> UIColor: \(color)"
-        )
-
         var schedule: Schedule? = nil
 
         if let scheduleData = trackerCD.scheduleData,
@@ -100,7 +95,8 @@ final class TrackerStore: NSObject {
             title: title,
             color: color,
             emoji: emoji,
-            schedule: schedule
+            schedule: schedule,
+            isPinned: trackerCD.isPinned
         )
     }
 
@@ -116,12 +112,8 @@ final class TrackerStore: NSObject {
         let hexString = tracker.color.hexString
         trackerCD.colorHEX = hexString
 
-        // Отладочная информация
-        print(
-            "DEBUG: Сохраняем трекер '\(tracker.title)' с цветом: \(tracker.color) -> hex: '\(hexString)'"
-        )
-
         trackerCD.category = category
+        trackerCD.isPinned = tracker.isPinned
 
         if let schedule = tracker.schedule {
             let data = try JSONEncoder().encode(schedule)
@@ -131,6 +123,58 @@ final class TrackerStore: NSObject {
         try context.save()
     }
 
+    // MARK: - Обновление
+    func updateTracker(_ tracker: Tracker, category: TrackerCategoryCoreData) throws {
+        guard let trackerCD = try findTracker(by: tracker.id) else {
+            throw NSError(domain: "TrackerStore", code: 404, userInfo: [NSLocalizedDescriptionKey: "Трекер не найден"])
+        }
+        
+        trackerCD.title = tracker.title
+        trackerCD.emoji = tracker.emoji
+        
+        let hexString = tracker.color.hexString
+        trackerCD.colorHEX = hexString
+        
+        trackerCD.category = category
+        trackerCD.isPinned = tracker.isPinned
+        
+        if let schedule = tracker.schedule {
+            let data = try JSONEncoder().encode(schedule)
+            trackerCD.scheduleData = String(data: data, encoding: .utf8)
+        } else {
+            trackerCD.scheduleData = nil
+        }
+        
+        try context.save()
+    }
+    
+    // MARK: - Закрепление/Открепление
+    func togglePin(for trackerId: UUID) throws {
+        guard let trackerCD = try findTracker(by: trackerId) else {
+            throw NSError(domain: "TrackerStore", code: 404, userInfo: [NSLocalizedDescriptionKey: "Трекер не найден"])
+        }
+        trackerCD.isPinned.toggle()
+        try context.save()
+    }
+    
+    // MARK: - Удаление
+    func deleteTracker(_ tracker: TrackerCoreData) throws {
+        // Удаляем все записи выполнения этого трекера
+        if let id = tracker.id {
+            let recordStore = TrackerRecordStore()
+            let records = try recordStore.fetchAllRecords()
+            for record in records {
+                if record.tracker?.id == id {
+                    try recordStore.deleteRecord(record)
+                }
+            }
+        }
+        
+        // Удаляем сам трекер
+        context.delete(tracker)
+        try context.save()
+    }
+    
     // MARK: - Загрузка всех (legacy - для совместимости)
     func fetchAllTrackers() throws -> [Tracker] {
         let request = TrackerCoreData.fetchRequest()

@@ -56,10 +56,6 @@ final class TrackerRecordStore: NSObject {
         return fetchedResultsController.object(at: indexPath)
     }
 
-    func allRecords() -> [TrackerRecordCoreData] {
-        return fetchedResultsController.fetchedObjects ?? []
-    }
-
     // MARK: - CRUD Operations
     func addRecord(tracker: TrackerCoreData, date: Date) throws {
         let record = TrackerRecordCoreData(context: context)
@@ -71,6 +67,11 @@ final class TrackerRecordStore: NSObject {
 
     func deleteRecord(at index: Int) throws {
         let record = record(at: index)
+        context.delete(record)
+        try context.save()
+    }
+    
+    func deleteRecord(_ record: TrackerRecordCoreData) throws {
         context.delete(record)
         try context.save()
     }
@@ -129,6 +130,7 @@ extension TrackerRecordStore: NSFetchedResultsControllerDelegate {
         _ controller: NSFetchedResultsController<NSFetchRequestResult>
     ) {
         delegate?.storeWillChangeContent()
+        delegate?.trackerRecordsDidUpdate()
     }
 
     func controller(
@@ -161,4 +163,48 @@ extension TrackerRecordStore: NSFetchedResultsControllerDelegate {
     ) {
         delegate?.storeDidChangeContent()
     }
+}
+
+// MARK: - Analytics Helpers
+extension TrackerRecordStore {
+    
+    /// Количество всех завершённых трекеров
+    func totalCompletedTrackers() -> Int {
+        // Используем прямой запрос к контексту, чтобы не зависеть от performFetch()
+        guard let records = try? fetchAllRecords() else {
+            return 0
+        }
+        return records.count
+    }
+
+    /// Возвращает все записи за указанную дату
+    func fetchRecords(for date: Date) throws -> [TrackerRecordCoreData] {
+        let request = TrackerRecordCoreData.fetchRequest()
+        let calendar = Calendar.current
+        let startOfDay = calendar.startOfDay(for: date)
+        let endOfDay = calendar.date(byAdding: .day, value: 1, to: startOfDay)!
+
+        request.predicate = NSPredicate(
+            format: "date >= %@ AND date < %@",
+            startOfDay as NSDate,
+            endOfDay as NSDate
+        )
+
+        return try context.fetch(request)
+    }
+
+    /// Возвращает количество завершённых трекеров (уникальных)
+    func completedTrackersCount() throws -> Int {
+        let records = try fetchAllRecords()
+        let unique = Set(records.compactMap { $0.tracker?.id })
+        return unique.count
+    }
+
+    /// Возвращает количество завершённых трекеров за дату
+    func completedTrackersCount(on date: Date) throws -> Int {
+        let records = try fetchRecords(for: date)
+        let unique = Set(records.compactMap { $0.tracker?.id })
+        return unique.count
+    }
+    
 }

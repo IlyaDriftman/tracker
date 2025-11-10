@@ -1,6 +1,6 @@
 import UIKit
 
-final class ScheduleViewController: UIViewController {
+final class ScheduleViewController: AnalyticsViewController {
     
     // MARK: - UI Elements
     private let tableView = UITableView()
@@ -14,6 +14,7 @@ final class ScheduleViewController: UIViewController {
     // MARK: - Lifecycle
     override func viewDidLoad() {
         super.viewDidLoad()
+        analyticsScreenName = .selectSchedule
         setupUI()
         setupConstraints()
     }

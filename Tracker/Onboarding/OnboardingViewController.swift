@@ -45,6 +45,16 @@ class OnboardingViewController: UIPageViewController {
         setupPageViewController()
     }
     
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        AnalyticsService.track(event: .open, screen: .onBoarding)
+    }
+    
+    override func viewDidDisappear(_ animated: Bool) {
+        super.viewDidDisappear(animated)
+        AnalyticsService.track(event: .close, screen: .onBoarding)
+    }
+    
     // MARK: - Setup Methods
     private func setupPageViewController() {
         dataSource = self

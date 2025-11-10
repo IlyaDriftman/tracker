@@ -77,8 +77,8 @@ final class CategoryViewModel: CategoryViewModelProtocol {
     /// Загрузить категории из Core Data
     func loadCategories() {
         do {
-            // Используем NSFetchedResultsController для получения данных
-            let categoriesCD = categoryStore.allCategories()
+            // Используем прямой fetch для получения данных
+            let categoriesCD = try categoryStore.fetchAllCategories()
             categories = categoriesCD.compactMap { categoryCD in
                 guard let title = categoryCD.title else { return nil }
                 return TrackerCategory(title: title, trackers: [])
@@ -195,6 +195,10 @@ final class CategoryViewModel: CategoryViewModelProtocol {
 
 // MARK: - StoreChangesDelegate
 extension CategoryViewModel: StoreChangesDelegate {
+    func trackerRecordsDidUpdate() {
+        //
+    }
+    
     func storeWillChangeContent() {
         // Можно добавить анимацию загрузки
     }

@@ -1,0 +1,18 @@
+/* 
+  Localizable.strings
+  Tracker
+
+  Created by Илья on 04.11.2025.
+  
+*/
+
+"main.trackers.tabTitle" = "Trackers";
+"main.trackers.navigationTitle" = "Trackers";
+"main.statistics.tabTitle" = "Statistics";
+"main.trackers.searchPlaceholder" = "Search";
+"main.trackers.filtersButtonTitle" = "Filters";
+"main.trackers.pinnedSectionTitle" = "Pinned";
+"main.trackers.contextMenu.pin" = "Pin";
+"main.trackers.contextMenu.unpin" = "Unpin";
+"main.trackers.contextMenu.edit" = "Edit";
+"main.trackers.contextMenu.delete" = "Delete";

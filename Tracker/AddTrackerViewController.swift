@@ -12,7 +12,7 @@ extension AddTrackerViewController: CategoryViewControllerDelegate {
     }
 }
 
-class AddTrackerViewController: UIViewController {
+class AddTrackerViewController: AnalyticsViewController {
     weak var delegate: AddTrackerViewControllerDelegate?
     var categories: [TrackerCategory] = []
     var selectedCategory: TrackerCategory?
@@ -59,7 +59,7 @@ class AddTrackerViewController: UIViewController {
         layout.sectionInset = UIEdgeInsets(
             top: 24,  // Отступ от заголовка до ячеек
             left: 8,
-            bottom: 16,
+            bottom: 46,
             right: 8
         )
 
@@ -77,9 +77,66 @@ class AddTrackerViewController: UIViewController {
     // MARK: - Lifecycle
     override func viewDidLoad() {
         super.viewDidLoad()
+        analyticsScreenName = .addTrackers
         setupUI()
         setupConstraints()
         updateCategoryButtonTitle()
+    }
+    
+    override func viewDidLayoutSubviews() {
+        super.viewDidLayoutSubviews()
+        // Принудительно обновляем layout collectionView после установки constraints
+        if collectionView.bounds.width > 0 {
+            collectionView.layoutIfNeeded()
+            
+            // Вычисляем необходимую высоту collectionView на основе содержимого
+            if let flowLayout = collectionView.collectionViewLayout as? UICollectionViewFlowLayout {
+                var totalHeight: CGFloat = 0
+                
+                // Параметры для расчета
+                let itemSize: CGFloat = 52
+                let itemSpacing: CGFloat = flowLayout.minimumInteritemSpacing // 5
+                let lineSpacing: CGFloat = flowLayout.minimumLineSpacing // 5
+                let sectionInsetLeft: CGFloat = flowLayout.sectionInset.left // 8
+                let sectionInsetRight: CGFloat = flowLayout.sectionInset.right // 8
+                let headerHeight: CGFloat = 18
+                let sectionTopInset: CGFloat = flowLayout.sectionInset.top // 24
+                let sectionBottomInset: CGFloat = flowLayout.sectionInset.bottom // 46
+                
+                // Доступная ширина для ячеек (collectionView уже имеет отступы 16px слева и справа)
+                let availableWidth = collectionView.bounds.width - sectionInsetLeft - sectionInsetRight
+                
+                // Количество элементов в ряду
+                let itemsPerRow = max(1, Int((availableWidth + itemSpacing) / (itemSize + itemSpacing)))
+                
+                // Высота для секции эмодзи
+                let emojiRows = (emojis.count + itemsPerRow - 1) / itemsPerRow
+                let emojiItemsHeight = CGFloat(emojiRows) * itemSize + CGFloat(max(0, emojiRows - 1)) * lineSpacing
+                let emojiSectionHeight = headerHeight + sectionTopInset + emojiItemsHeight + sectionBottomInset
+                
+                // Высота для секции цветов
+                let colorRows = (colors.count + itemsPerRow - 1) / itemsPerRow
+                let colorItemsHeight = CGFloat(colorRows) * itemSize + CGFloat(max(0, colorRows - 1)) * lineSpacing
+                let colorSectionHeight = headerHeight + sectionTopInset + colorItemsHeight + sectionBottomInset
+                
+                totalHeight = emojiSectionHeight + colorSectionHeight
+                
+                // Обновляем height constraint для collectionView
+                collectionView.constraints.forEach { constraint in
+                    if constraint.firstAttribute == .height {
+                        constraint.isActive = false
+                    }
+                }
+                collectionView.heightAnchor.constraint(equalToConstant: totalHeight).isActive = true
+                collectionView.layoutIfNeeded()
+            }
+        }
+    }
+    
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        // Перезагружаем данные перед появлением экрана
+        collectionView.reloadData()
     }
 
     // MARK: - UI Setup
@@ -254,7 +311,7 @@ class AddTrackerViewController: UIViewController {
         )
         collectionView.backgroundColor = .clear
         collectionView.translatesAutoresizingMaskIntoConstraints = false
-        collectionView.isScrollEnabled = true  // Включаем скролл коллекции
+        collectionView.isScrollEnabled = false  // Отключаем скролл, так как collectionView внутри scrollView
 
         // Buttons
         cancelButton.setTitle("Отменить", for: .normal)
@@ -314,12 +371,11 @@ class AddTrackerViewController: UIViewController {
         optionsContainer.addSubview(scheduleButton)
         optionsContainer.addSubview(categoryScheduleSeparator)
 
-        [titleLabel, nameView, optionsContainer, collectionView].forEach {
+        [titleLabel, nameView, optionsContainer, collectionView, buttonsContainer].forEach {
             contentView.addSubview($0)
         }
 
-        // Добавляем контейнер кнопок и кнопки
-        view.addSubview(buttonsContainer)
+        // Добавляем кнопки в контейнер
         [cancelButton, createButton].forEach {
             buttonsContainer.addSubview($0)
         }
@@ -334,7 +390,7 @@ class AddTrackerViewController: UIViewController {
             scrollView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             scrollView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
             scrollView.bottomAnchor.constraint(
-                equalTo: buttonsContainer.topAnchor
+                equalTo: view.safeAreaLayoutGuide.bottomAnchor
             ),
 
             // ContentView
@@ -349,9 +405,6 @@ class AddTrackerViewController: UIViewController {
                 equalTo: scrollView.bottomAnchor
             ),
             contentView.widthAnchor.constraint(equalTo: scrollView.widthAnchor),
-            contentView.heightAnchor.constraint(
-                greaterThanOrEqualTo: scrollView.heightAnchor
-            ),
 
             // Title
             titleLabel.topAnchor.constraint(
@@ -507,25 +560,22 @@ class AddTrackerViewController: UIViewController {
                 equalTo: contentView.trailingAnchor,
                 constant: -16
             ),
-            collectionView.heightAnchor.constraint(
-                greaterThanOrEqualToConstant: 600
-            ),  // Минимальная высота для коллекции
-            collectionView.bottomAnchor.constraint(
-                equalTo: contentView.bottomAnchor,
-                constant: -100
-            ),  // Привязываем к низу contentView с отступом для кнопок
 
-            // Buttons Container - прижимаем к низу экрана
-            buttonsContainer.bottomAnchor.constraint(
-                equalTo: view.safeAreaLayoutGuide.bottomAnchor
+            // Buttons Container - размещаем под collectionView на расстоянии 16px
+            buttonsContainer.topAnchor.constraint(
+                equalTo: collectionView.bottomAnchor,
+                constant: 16
             ),
             buttonsContainer.leadingAnchor.constraint(
-                equalTo: view.leadingAnchor
+                equalTo: contentView.leadingAnchor
             ),
             buttonsContainer.trailingAnchor.constraint(
-                equalTo: view.trailingAnchor
+                equalTo: contentView.trailingAnchor
             ),
-            buttonsContainer.heightAnchor.constraint(equalToConstant: 100),  // Высота контейнера с отступом
+            buttonsContainer.bottomAnchor.constraint(
+                equalTo: contentView.bottomAnchor
+            ),
+            buttonsContainer.heightAnchor.constraint(equalToConstant: 60),
 
             // Buttons - внутри контейнера
             cancelButton.bottomAnchor.constraint(
@@ -556,7 +606,7 @@ class AddTrackerViewController: UIViewController {
             ),
             createButton.heightAnchor.constraint(equalToConstant: 60),
 
-            // ContentView bottom constraint
+            // ContentView bottom
             contentView.bottomAnchor.constraint(
                 equalTo: scrollView.bottomAnchor
             ),
@@ -605,10 +655,10 @@ class AddTrackerViewController: UIViewController {
             title: name,
             color: selectedColor,
             emoji: selectedEmoji,
-            schedule: selectedWeekdays.isEmpty ? nil : .custom(selectedWeekdays)
+            schedule: selectedWeekdays.isEmpty ? nil : .custom(selectedWeekdays),
+            isPinned: false
         )
 
-        print("Created tracker: \(newTracker)")
         delegate?.didCreateTracker(newTracker, in: categoryToUse)
         dismiss(animated: true)
     }
@@ -668,15 +718,6 @@ class AddTrackerViewController: UIViewController {
         }
     }
 
-    private func showAlert(title: String, message: String) {
-        let alert = UIAlertController(
-            title: title,
-            message: message,
-            preferredStyle: .alert
-        )
-        alert.addAction(UIAlertAction(title: "OK", style: .default))
-        present(alert, animated: true)
-    }
 
     private func updateCreateButtonState() {
         let hasName = !(nameTextField.text?.isEmpty ?? true) && !isNameTooLong()

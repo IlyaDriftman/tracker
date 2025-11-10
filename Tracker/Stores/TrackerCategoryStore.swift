@@ -58,9 +58,6 @@ final class TrackerCategoryStore: NSObject {
         return fetchedResultsController.object(at: indexPath)
     }
 
-    func allCategories() -> [TrackerCategoryCoreData] {
-        return fetchedResultsController.fetchedObjects ?? []
-    }
     // Добавить категорию
     func addCategory(title: String) throws -> TrackerCategoryCoreData {
         let category = TrackerCategoryCoreData(context: context)

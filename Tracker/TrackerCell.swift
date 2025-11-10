@@ -5,7 +5,14 @@ protocol TrackerCellDelegate: AnyObject {
     func uncompleteTracker(id: UUID, at indexPath: IndexPath)
 }
 
+protocol TrackerCellContextMenuDelegate: AnyObject {
+    func trackerCellDidRequestPin(at indexPath: IndexPath)
+    func trackerCellDidRequestEdit(at indexPath: IndexPath)
+    func trackerCellDidRequestDelete(at indexPath: IndexPath)
+}
+
 class TrackerCell: UICollectionViewCell {
+    
 
     // MARK: - UI Elements
     private let emojiView = UIView()
@@ -13,6 +20,7 @@ class TrackerCell: UICollectionViewCell {
     private let titleLabel = UILabel()
     private let daysLabel = UILabel()
     private let plusButton = UIButton(type: .system)
+    private let pinIconView = UIImageView()
 
     // MARK: - Properties
     private var tracker: Tracker?
@@ -20,13 +28,21 @@ class TrackerCell: UICollectionViewCell {
     private var isCompletedToday: Bool = false
     private var trackerId: UUID?
     private var indexPath: IndexPath?
+    private var contextMenuInteraction: UIContextMenuInteraction?
 
     weak var delegate: TrackerCellDelegate?
+    weak var contextMenuDelegate: TrackerCellContextMenuDelegate?
+    
+    private let labelPin = NSLocalizedString("main.trackers.contextMenu.pin", comment: "Context menu action title to pin tracker")
+    private let labelUnpin = NSLocalizedString("main.trackers.contextMenu.unpin", comment: "Context menu action title to unpin tracker")
+    private let labelEdit = NSLocalizedString("main.trackers.contextMenu.edit", comment: "Context menu action title to edit tracker")
+    private let labelDelete = NSLocalizedString("main.trackers.contextMenu.delete", comment: "Context menu action title to delete tracker")
 
     // MARK: - Init
     override init(frame: CGRect) {
         super.init(frame: frame)
         setupUI()
+        setupContextMenu()
     }
 
     required init?(coder: NSCoder) {
@@ -73,11 +89,19 @@ class TrackerCell: UICollectionViewCell {
             for: .touchUpInside
         )
         plusButton.translatesAutoresizingMaskIntoConstraints = false
+        
+        // Pin Icon
+        pinIconView.image = UIImage(resource: .screpka)
+        pinIconView.tintColor = .white
+        pinIconView.contentMode = .scaleAspectFit
+        pinIconView.isHidden = true
+        pinIconView.translatesAutoresizingMaskIntoConstraints = false
 
         // Add subviews
         addSubview(emojiView)
         emojiView.addSubview(emojiLabel)
         emojiView.addSubview(titleLabel)
+        emojiView.addSubview(pinIconView)
         addSubview(daysLabel)
         addSubview(plusButton)
 
@@ -139,9 +163,31 @@ class TrackerCell: UICollectionViewCell {
             ),
             plusButton.widthAnchor.constraint(equalToConstant: 34),
             plusButton.heightAnchor.constraint(equalToConstant: 34),
+            
+            // Pin Icon - справа сверху emojiView
+            pinIconView.topAnchor.constraint(
+                equalTo: emojiView.topAnchor,
+                constant: 12
+            ),
+            pinIconView.trailingAnchor.constraint(
+                equalTo: emojiView.trailingAnchor,
+                constant: -4
+            ),
+            pinIconView.widthAnchor.constraint(equalToConstant: 24),
+            pinIconView.heightAnchor.constraint(equalToConstant: 24),
         ])
     }
-
+    
+    private func setupContextMenu() {
+            // Убеждаемся, что emojiView может обрабатывать взаимодействия
+            emojiView.isUserInteractionEnabled = true
+            
+            let interaction = UIContextMenuInteraction(delegate: self)
+            // Добавляем взаимодействие только на emojiView (область с эмодзи и названием)
+            emojiView.addInteraction(interaction)
+            contextMenuInteraction = interaction
+    }
+    
     // MARK: - Configuration
     func configure(
         with tracker: Tracker,
@@ -164,26 +210,21 @@ class TrackerCell: UICollectionViewCell {
         plusButton.tintColor = tracker.color
 
         let wordDay = pluralizeDays(completedDays)
-        daysLabel.text = "\(completedDays) \(wordDay)"
+        daysLabel.text = "\(wordDay)"
         // Обновляем иконку кнопки
         let image = isCompletedToday ? doneImage : unDoneImage
         plusButton.setImage(image, for: .normal)
+        
+        // Показываем/скрываем иконку булавки
+        pinIconView.isHidden = !tracker.isPinned
     }
 
-    // MARK: - Helper Methods
-    private func pluralizeDays(_ count: Int) -> String {
-        let remainder = count % 10
-        let remainder100 = count % 100
-
-        if remainder100 >= 11 && remainder100 <= 19 {
-            return "дней"
-        } else if remainder == 1 {
-            return "день"
-        } else if remainder >= 2 && remainder <= 4 {
-            return "дня"
-        } else {
-            return "дней"
-        }
+    func pluralizeDays(_ count: Int) -> String {
+        let localized = String.localizedStringWithFormat(
+            NSLocalizedString("days_count", comment: ""),
+            count
+        )
+        return localized
     }
 
     func updateButtonState(isCompletedToday: Bool, completedDays: Int) {
@@ -200,8 +241,14 @@ class TrackerCell: UICollectionViewCell {
 
     // MARK: - Actions
     @objc private func plusButtonTapped() {
-        guard let trackerId = trackerId, let indexPath = indexPath else {
+        guard let trackerId = trackerId else {
             assertionFailure("no trackerID")
+            return
+        }
+        
+        // Получаем indexPath из collectionView
+        guard let collectionView = superview as? UICollectionView,
+              let indexPath = collectionView.indexPath(for: self) else {
             return
         }
 
@@ -212,7 +259,50 @@ class TrackerCell: UICollectionViewCell {
             // Если не выполнен - отмечаем как выполненный
             delegate?.completetracker(id: trackerId, at: indexPath)
         }
+    }
+}
 
-        print("Plus button")
+// MARK: - UIContextMenuInteractionDelegate
+@available(iOS 13.0, *)
+extension TrackerCell: UIContextMenuInteractionDelegate {
+    func contextMenuInteraction(
+        _ interaction: UIContextMenuInteraction,
+        configurationForMenuAtLocation location: CGPoint
+    ) -> UIContextMenuConfiguration? {
+        guard let indexPath = indexPath, let tracker = tracker else { return nil }
+        
+        return UIContextMenuConfiguration(identifier: nil, previewProvider: nil) { [weak self] _ in
+            guard let self = self else { return nil }
+            
+            // Первый пункт: Закрепить/Открепить
+            let pinTitle = tracker.isPinned ? labelUnpin : labelPin
+            let pinAction = UIAction(title: pinTitle) { _ in
+                AnalyticsService.click(screen: .main, item: tracker.isPinned ? .unpin : .pin)
+                self.contextMenuDelegate?.trackerCellDidRequestPin(at: indexPath)
+            }
+            
+            // Второй пункт: Редактировать
+            let editAction = UIAction(title: labelEdit) { _ in
+                AnalyticsService.click(screen: .main, item: .edit)
+                self.contextMenuDelegate?.trackerCellDidRequestEdit(at: indexPath)
+            }
+            
+            // Третий пункт: Удалить (красным цветом)
+            let deleteAction = UIAction(
+                title: labelDelete,
+                attributes: .destructive
+            ) { _ in
+                AnalyticsService.click(screen: .main, item: .delete)
+                self.contextMenuDelegate?.trackerCellDidRequestDelete(at: indexPath)
+            }
+            
+            let menu = UIMenu(
+                title: "",
+                children: [pinAction, editAction, deleteAction]
+            )
+            menu.preferredElementSize = .large
+            
+            return menu
+        }
     }
 }

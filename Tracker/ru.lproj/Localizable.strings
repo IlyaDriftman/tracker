@@ -1,0 +1,18 @@
+/* 
+  Localizable.strings
+  Tracker
+
+  Created by Илья on 04.11.2025.
+  
+*/
+
+"main.trackers.tabTitle" = "Трекеры";
+"main.trackers.navigationTitle" = "Трекеры";
+"main.statistics.tabTitle" = "Статистика";
+"main.trackers.searchPlaceholder" = "Поиск";
+"main.trackers.filtersButtonTitle" = "Фильтры";
+"main.trackers.pinnedSectionTitle" = "Закрепленные";
+"main.trackers.contextMenu.pin" = "Закрепить";
+"main.trackers.contextMenu.unpin" = "Открепить";
+"main.trackers.contextMenu.edit" = "Редактировать";
+"main.trackers.contextMenu.delete" = "Удалить";

@@ -26,27 +26,28 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
     }
     
     // MARK: - Private Methods
-    private func showMainInterface() {
+    func showMainInterface() {
         SettingsManager.shared.hasSeenOnboarding = true
         
         let tabBarController = UITabBarController()
         
         // Первая вкладка - Трекеры
+        let labelTrackers = NSLocalizedString("main.trackers.tabTitle", comment: "Tab title for trackers screen")
         let trackersVC = TrackersViewController()
         let trackersNavController = UINavigationController(rootViewController: trackersVC)
         trackersNavController.tabBarItem = UITabBarItem(
-            title: "",
+            
+            title: labelTrackers,
             image: UIImage(named: "trackertab"),
             selectedImage: UIImage(named: "trackertab")
         )
         
-        // Вторая вкладка - Статистика (пока пустая)
-        let statsVC = UIViewController()
-        statsVC.view.backgroundColor = .systemBackground
-        statsVC.title = "Статистика"
+        let labelStatistics = NSLocalizedString("main.statistics.tabTitle", comment: "Tab title for statistics screen")
+        // Вторая вкладка - Статистика
+        let statsVC = StatisticsViewController()
         let statsNavController = UINavigationController(rootViewController: statsVC)
         statsNavController.tabBarItem = UITabBarItem(
-            title: "",
+            title: labelStatistics,
             image: UIImage(named: "statistictab"),
             selectedImage: UIImage(named: "statistictab")
         )

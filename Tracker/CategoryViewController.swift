@@ -9,7 +9,7 @@ protocol CategoryCellDelegate: AnyObject {
     func categoryCellDidRequestDelete(at indexPath: IndexPath)
 }
 
-final class CategoryViewController: UIViewController {
+final class CategoryViewController: AnalyticsViewController {
     weak var delegate: CategoryViewControllerDelegate?
     var selectedCategory: TrackerCategory? // Выбранная категория для отображения галочки
     
@@ -42,6 +42,7 @@ final class CategoryViewController: UIViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
+        analyticsScreenName = .selectCategory
         setupUI()
         setupConstraints()
        // setupContextMenu()
@@ -225,155 +226,16 @@ final class CategoryViewController: UIViewController {
     }
     
     private func deleteCategory(at indexPath: IndexPath, title: String) {
-        showBottomDeleteAlert(for: indexPath)
+        let deleteView = DeleteConfirmationView()
+        deleteView.show(
+            in: self,
+            message: "Эта категория точно не нужна?",
+            onConfirm: { [weak self] in
+                self?.viewModel.deleteCategory(at: indexPath.row)
+            }
+        )
     }
     
-    private func showBottomDeleteAlert(for indexPath: IndexPath) {
-        // Создаем контейнер для диалога
-        let containerView = UIView()
-        containerView.backgroundColor = UIColor.black.withAlphaComponent(0.3)
-        containerView.translatesAutoresizingMaskIntoConstraints = false
-        
-        // Создаем action sheet
-        let actionSheetView = UIView()
-        actionSheetView.backgroundColor = .clear
-        actionSheetView.translatesAutoresizingMaskIntoConstraints = false
-        
-        // Блок с текстом и кнопкой удалить
-        let contentView = UIView()
-        contentView.backgroundColor = UIColor(hex: "#F5F5F5B2")
-        contentView.layer.cornerRadius = 13
-        contentView.layer.maskedCorners = [.layerMinXMinYCorner, .layerMaxXMinYCorner, .layerMinXMaxYCorner, .layerMaxXMaxYCorner]
-        contentView.translatesAutoresizingMaskIntoConstraints = false
-        
-        // Сообщение
-        let messageLabel = UILabel()
-        messageLabel.text = "Эта категория точно не нужна?"
-        messageLabel.font = .systemFont(ofSize: 13)
-        messageLabel.textColor = UIColor(hex: "#3C3C4399")
-        messageLabel.textAlignment = .center
-        messageLabel.numberOfLines = 0
-        messageLabel.translatesAutoresizingMaskIntoConstraints = false
-        
-        // Сепаратор
-        let separatorView = UIView()
-        separatorView.backgroundColor = UIColor(hex: "#3C3C435C")
-        separatorView.translatesAutoresizingMaskIntoConstraints = false
-        
-        // Кнопка "Удалить" (красный текст, без фона)
-        let deleteButton = UIButton(type: .system)
-        deleteButton.setTitle("Удалить", for: .normal)
-        deleteButton.setTitleColor(.systemRed, for: .normal)
-        deleteButton.backgroundColor = .clear
-        deleteButton.titleLabel?.font = .systemFont(ofSize: 17, weight: .medium)
-        deleteButton.translatesAutoresizingMaskIntoConstraints = false
-        deleteButton.addTarget(self, action: #selector(confirmDelete), for: .touchUpInside)
-        
-        // Кнопка "Отменить" (белая с синим текстом)
-        let cancelButton = UIButton(type: .system)
-        cancelButton.setTitle("Отменить", for: .normal)
-        cancelButton.setTitleColor(.systemBlue, for: .normal)
-        cancelButton.backgroundColor = .white
-        cancelButton.layer.cornerRadius = 16
-        cancelButton.titleLabel?.font = .systemFont(ofSize: 17, weight: .medium)
-        cancelButton.translatesAutoresizingMaskIntoConstraints = false
-        cancelButton.addTarget(self, action: #selector(cancelDelete), for: .touchUpInside)
-        
-        // Добавляем элементы
-        view.addSubview(containerView)
-        containerView.addSubview(actionSheetView)
-        actionSheetView.addSubview(contentView)
-        contentView.addSubview(messageLabel)
-        contentView.addSubview(separatorView)
-        contentView.addSubview(deleteButton)
-        actionSheetView.addSubview(cancelButton) // Кнопка отмены поверх contentView
-        
-        // Констрейнты
-        NSLayoutConstraint.activate([
-            // Контейнер на весь экран
-            containerView.topAnchor.constraint(equalTo: view.topAnchor),
-            containerView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
-            containerView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-            containerView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
-            
-            // Action sheet снизу, перекрывает список
-            actionSheetView.leadingAnchor.constraint(equalTo: containerView.leadingAnchor, constant: 8),
-            actionSheetView.trailingAnchor.constraint(equalTo: containerView.trailingAnchor, constant: -8),
-            actionSheetView.bottomAnchor.constraint(equalTo: containerView.bottomAnchor),
-            
-            // Content view (блок с текстом и кнопкой удалить) - 8px над кнопкой отмена
-            contentView.leadingAnchor.constraint(equalTo: actionSheetView.leadingAnchor, constant: 8),
-            contentView.trailingAnchor.constraint(equalTo: actionSheetView.trailingAnchor, constant: -8),
-            contentView.topAnchor.constraint(equalTo: actionSheetView.topAnchor),
-            contentView.bottomAnchor.constraint(equalTo: cancelButton.topAnchor, constant: -8),
-            
-            // Сообщение (отступы 12px сверху и снизу, высота блока с текстом 42px)
-            messageLabel.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 12),
-            messageLabel.leadingAnchor.constraint(equalTo: contentView.leadingAnchor),
-            messageLabel.trailingAnchor.constraint(equalTo: contentView.trailingAnchor),
-            messageLabel.heightAnchor.constraint(equalToConstant: 18), // Блок с текстом 18px
-            
-            // Сепаратор под текстом (после отступа 12px)
-            separatorView.topAnchor.constraint(equalTo: messageLabel.bottomAnchor, constant: 12),
-            separatorView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor),
-            separatorView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor),
-            separatorView.heightAnchor.constraint(equalToConstant: 0.5),
-            
-            // Кнопка "Удалить" под сепаратором (высота 61px, по центру)
-            deleteButton.topAnchor.constraint(equalTo: separatorView.bottomAnchor),
-            deleteButton.leadingAnchor.constraint(equalTo: contentView.leadingAnchor),
-            deleteButton.trailingAnchor.constraint(equalTo: contentView.trailingAnchor),
-            deleteButton.heightAnchor.constraint(equalToConstant: 61), // Высота кнопки 61px
-            deleteButton.bottomAnchor.constraint(equalTo: contentView.bottomAnchor),
-            
-            // Кнопка "Отменить" (высота 61px, отступ сверху 8px, снизу 32px)
-            cancelButton.topAnchor.constraint(equalTo: contentView.bottomAnchor, constant: 8),
-            cancelButton.leadingAnchor.constraint(equalTo: actionSheetView.leadingAnchor, constant: 8),
-            cancelButton.trailingAnchor.constraint(equalTo: actionSheetView.trailingAnchor, constant: -8),
-            cancelButton.heightAnchor.constraint(equalToConstant: 61),
-            cancelButton.bottomAnchor.constraint(equalTo: actionSheetView.bottomAnchor, constant: -32)
-        ])
-        
-        // Анимация появления снизу
-        actionSheetView.transform = CGAffineTransform(translationX: 0, y: 200)
-        UIView.animate(withDuration: 0.3, delay: 0, usingSpringWithDamping: 0.8, initialSpringVelocity: 0.5) {
-            actionSheetView.transform = .identity
-        }
-        
-        // Сохраняем ссылки для удаления
-        self.currentDeleteContainer = containerView
-        self.currentDeleteIndexPath = indexPath
-    }
-    
-    private var currentDeleteContainer: UIView?
-    private var currentDeleteIndexPath: IndexPath?
-    
-    @objc private func confirmDelete() {
-        guard let indexPath = currentDeleteIndexPath else { return }
-        viewModel.deleteCategory(at: indexPath.row)
-        dismissDeleteAlert()
-    }
-    
-    @objc private func cancelDelete() {
-        dismissDeleteAlert()
-    }
-    
-    private func dismissDeleteAlert() {
-        guard let container = currentDeleteContainer else { return }
-        UIView.animate(withDuration: 0.3, animations: {
-            container.alpha = 0
-        }) { _ in
-            container.removeFromSuperview()
-        }
-        currentDeleteContainer = nil
-        currentDeleteIndexPath = nil
-    }
-    
-    private func showAlert(title: String, message: String) {
-        let alert = UIAlertController(title: title, message: message, preferredStyle: .alert)
-        alert.addAction(UIAlertAction(title: "OK", style: .default))
-        present(alert, animated: true)
-    }
 }
 
 // MARK: - UITableViewDataSource
@@ -457,11 +319,12 @@ class CategoryCell: UITableViewCell {
     // Делегат для контекстного меню
     weak var contextMenuDelegate: CategoryCellDelegate?
     private var indexPath: IndexPath?
+    private var contextMenuInteraction: UIContextMenuInteraction?
     
     override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
         super.init(style: style, reuseIdentifier: reuseIdentifier)
         setupUI()
-       // setupContextMenu()
+        setupContextMenu()
     }
     
     required init?(coder: NSCoder) {
@@ -469,7 +332,7 @@ class CategoryCell: UITableViewCell {
     }
     
             private func setupUI() {
-                backgroundColor = UIColor(hex: "#E6E8EB4D")
+        backgroundColor = UIColor(hex: "#E6E8EB4D")
                 selectionStyle = .none
         
         titleLabel.font = .systemFont(ofSize: 17)
@@ -490,6 +353,12 @@ class CategoryCell: UITableViewCell {
             checkmarkImageView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -16),
             checkmarkImageView.centerYAnchor.constraint(equalTo: contentView.centerYAnchor)
         ])
+    }
+    
+    private func setupContextMenu() {
+            let interaction = UIContextMenuInteraction(delegate: self)
+            addInteraction(interaction)
+            contextMenuInteraction = interaction
     }
     
             override func layoutSubviews() {
