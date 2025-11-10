@@ -33,10 +33,10 @@ class TrackerCell: UICollectionViewCell {
     weak var delegate: TrackerCellDelegate?
     weak var contextMenuDelegate: TrackerCellContextMenuDelegate?
     
-    private let labelPin = NSLocalizedString("pin", comment: "label Pin")
-    private let labelUnpin = NSLocalizedString("unpin", comment: "label UnPin")
-    private let labelEdit = NSLocalizedString("edit", comment: "label Edit")
-    private let labelDelete = NSLocalizedString("delete", comment: "label Dell")
+    private let labelPin = NSLocalizedString("main.trackers.contextMenu.pin", comment: "Context menu action title to pin tracker")
+    private let labelUnpin = NSLocalizedString("main.trackers.contextMenu.unpin", comment: "Context menu action title to unpin tracker")
+    private let labelEdit = NSLocalizedString("main.trackers.contextMenu.edit", comment: "Context menu action title to edit tracker")
+    private let labelDelete = NSLocalizedString("main.trackers.contextMenu.delete", comment: "Context menu action title to delete tracker")
 
     // MARK: - Init
     override init(frame: CGRect) {
@@ -91,7 +91,7 @@ class TrackerCell: UICollectionViewCell {
         plusButton.translatesAutoresizingMaskIntoConstraints = false
         
         // Pin Icon
-        pinIconView.image = UIImage(named: "screpka")
+        pinIconView.image = UIImage(resource: .screpka)
         pinIconView.tintColor = .white
         pinIconView.contentMode = .scaleAspectFit
         pinIconView.isHidden = true
@@ -179,7 +179,6 @@ class TrackerCell: UICollectionViewCell {
     }
     
     private func setupContextMenu() {
-        if #available(iOS 13.0, *) {
             // Убеждаемся, что emojiView может обрабатывать взаимодействия
             emojiView.isUserInteractionEnabled = true
             
@@ -187,7 +186,6 @@ class TrackerCell: UICollectionViewCell {
             // Добавляем взаимодействие только на emojiView (область с эмодзи и названием)
             emojiView.addInteraction(interaction)
             contextMenuInteraction = interaction
-        }
     }
     
     // MARK: - Configuration
@@ -221,22 +219,6 @@ class TrackerCell: UICollectionViewCell {
         pinIconView.isHidden = !tracker.isPinned
     }
 
-    // MARK: - Helper Methods
-//    private func pluralizeDays(_ count: Int) -> String {
-//        let remainder = count % 10
-//        let remainder100 = count % 100
-//
-//        if remainder100 >= 11 && remainder100 <= 19 {
-//            return "дней"
-//        } else if remainder == 1 {
-//            return "день"
-//        } else if remainder >= 2 && remainder <= 4 {
-//            return "дня"
-//        } else {
-//            return "дней"
-//        }
-//    }
-    
     func pluralizeDays(_ count: Int) -> String {
         let localized = String.localizedStringWithFormat(
             NSLocalizedString("days_count", comment: ""),

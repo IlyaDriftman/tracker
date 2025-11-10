@@ -6,12 +6,13 @@
   
 */
 
-"trackers" = "Трекеры"; 
-"statistics" = "Статистика";
-"search" = "Поиск"; 
-"filters" = "Фильтры"; 
-"pinned" = "Закрепленные";
-"pin" = "Закрепить";
-"unpin" = "Открепить";
-"edit" = "Редактировать";
-"delete" = "Удалить";
+"main.trackers.tabTitle" = "Трекеры";
+"main.trackers.navigationTitle" = "Трекеры";
+"main.statistics.tabTitle" = "Статистика";
+"main.trackers.searchPlaceholder" = "Поиск";
+"main.trackers.filtersButtonTitle" = "Фильтры";
+"main.trackers.pinnedSectionTitle" = "Закрепленные";
+"main.trackers.contextMenu.pin" = "Закрепить";
+"main.trackers.contextMenu.unpin" = "Открепить";
+"main.trackers.contextMenu.edit" = "Редактировать";
+"main.trackers.contextMenu.delete" = "Удалить";

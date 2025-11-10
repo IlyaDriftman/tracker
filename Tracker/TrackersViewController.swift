@@ -17,9 +17,9 @@ class TrackersViewController: AnalyticsViewController {
     private let plusImage = UIImage(named: "plus")
     private let filtersButton = UIButton(type: .system)
     let colors = MyColor()
-    private let labelSearch = NSLocalizedString("search", comment: "label Search")
-    private let labelFilter = NSLocalizedString("filters", comment: "label Filter")
-    private let labelPinned = NSLocalizedString("pinned", comment: "label Pinned")
+    private let labelSearch = NSLocalizedString("main.trackers.searchPlaceholder", comment: "Search field placeholder on trackers screen")
+    private let labelFilter = NSLocalizedString("main.trackers.filtersButtonTitle", comment: "Filters button title on trackers screen")
+    private let labelPinned = NSLocalizedString("main.trackers.pinnedSectionTitle", comment: "Pinned section title on trackers screen")
 
     // MARK: - Properties
     var datePicker: UIDatePicker?
@@ -161,10 +161,8 @@ class TrackersViewController: AnalyticsViewController {
         // Определяем дату для фильтрации по расписанию
         let filterDate: Date
         if selectedFilter == .today {
-            // Для фильтра "Трекеры на сегодня" используем текущую дату
             filterDate = Date()
         } else {
-            // Для остальных фильтров используем выбранную дату в календаре
             filterDate = currentDate
         }
         
@@ -443,7 +441,7 @@ class TrackersViewController: AnalyticsViewController {
     }
 
     private func setupTitleLabel() {
-        let labelTrackers = NSLocalizedString("trackers", comment: "label Trackers")
+        let labelTrackers = NSLocalizedString("main.trackers.navigationTitle", comment: "Navigation title for trackers screen")
 
         titleLabel.text = labelTrackers
         titleLabel.font = .systemFont(ofSize: 34, weight: .bold)

@@ -356,11 +356,9 @@ class CategoryCell: UITableViewCell {
     }
     
     private func setupContextMenu() {
-        if #available(iOS 13.0, *) {
             let interaction = UIContextMenuInteraction(delegate: self)
             addInteraction(interaction)
             contextMenuInteraction = interaction
-        }
     }
     
             override func layoutSubviews() {

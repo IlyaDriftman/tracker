@@ -32,7 +32,7 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         let tabBarController = UITabBarController()
         
         // Первая вкладка - Трекеры
-        let labelTrackers = NSLocalizedString("trackers", comment: "label Trackers")
+        let labelTrackers = NSLocalizedString("main.trackers.tabTitle", comment: "Tab title for trackers screen")
         let trackersVC = TrackersViewController()
         let trackersNavController = UINavigationController(rootViewController: trackersVC)
         trackersNavController.tabBarItem = UITabBarItem(
@@ -42,7 +42,7 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
             selectedImage: UIImage(named: "trackertab")
         )
         
-        let labelStatistics = NSLocalizedString("statistics", comment: "label Statistic")
+        let labelStatistics = NSLocalizedString("main.statistics.tabTitle", comment: "Tab title for statistics screen")
         // Вторая вкладка - Статистика
         let statsVC = StatisticsViewController()
         let statsNavController = UINavigationController(rootViewController: statsVC)

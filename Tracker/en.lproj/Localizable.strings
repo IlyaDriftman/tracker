@@ -6,12 +6,13 @@
   
 */
 
-"trackers" = "Trackers";
-"statistics" = "Statistics";
-"search" = "Search";
-"filters" = "Filters";
-"pinned" = "Pinned";
-"pin" = "Pin";
-"unpin" = "Unpin";
-"edit" = "Edit";
-"delete" = "Delete";
+"main.trackers.tabTitle" = "Trackers";
+"main.trackers.navigationTitle" = "Trackers";
+"main.statistics.tabTitle" = "Statistics";
+"main.trackers.searchPlaceholder" = "Search";
+"main.trackers.filtersButtonTitle" = "Filters";
+"main.trackers.pinnedSectionTitle" = "Pinned";
+"main.trackers.contextMenu.pin" = "Pin";
+"main.trackers.contextMenu.unpin" = "Unpin";
+"main.trackers.contextMenu.edit" = "Edit";
+"main.trackers.contextMenu.delete" = "Delete";

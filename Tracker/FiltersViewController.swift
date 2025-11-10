@@ -16,8 +16,33 @@ final class FiltersViewController: AnalyticsViewController {
     var selectedFilter: FilterType = .all
     
     // MARK: - UI Elements
-    private let titleLabel = UILabel()
-    private let tableView = UITableView()
+    private let titleLabel: UILabel = {
+        let title = UILabel()
+        title.text = "Фильтры"
+        title.font = .boldSystemFont(ofSize: 16)
+        title.textAlignment = .center
+        title.translatesAutoresizingMaskIntoConstraints = false
+        return title
+    }()
+   
+
+    private let tableView: UITableView = {
+        let table = UITableView()
+        
+        table.register(
+            FilterCell.self,
+            forCellReuseIdentifier: FilterCell.reuseIdentifier
+        )
+        table.separatorStyle = .none
+        table.backgroundColor = .clear
+        table.layer.cornerRadius = 16
+        table.clipsToBounds = true
+        table.translatesAutoresizingMaskIntoConstraints = false
+        table.tableFooterView = UIView()
+        table.contentInsetAdjustmentBehavior = .never
+        table.isScrollEnabled = false
+        return table
+    }()
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -28,29 +53,8 @@ final class FiltersViewController: AnalyticsViewController {
     
     private func setupUI() {
         view.backgroundColor = .systemBackground
-        
-        // Title Label
-        titleLabel.text = "Фильтры"
-        titleLabel.font = .boldSystemFont(ofSize: 16)
-        titleLabel.textAlignment = .center
-        titleLabel.translatesAutoresizingMaskIntoConstraints = false
-        
-        // Table View
         tableView.delegate = self
         tableView.dataSource = self
-        tableView.register(
-            FilterCell.self,
-            forCellReuseIdentifier: "FilterCell"
-        )
-        tableView.separatorStyle = .none
-        tableView.backgroundColor = .clear
-        tableView.layer.cornerRadius = 16
-        tableView.clipsToBounds = true
-        tableView.translatesAutoresizingMaskIntoConstraints = false
-        tableView.tableFooterView = UIView()
-        tableView.contentInsetAdjustmentBehavior = .never
-        tableView.isScrollEnabled = false
-        
         view.addSubview(titleLabel)
         view.addSubview(tableView)
     }
@@ -99,11 +103,14 @@ extension FiltersViewController: UITableViewDataSource {
     }
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let cell = tableView.dequeueReusableCell(
-            withIdentifier: "FilterCell",
+        guard let cell = tableView.dequeueReusableCell(
+            withIdentifier: FilterCell.reuseIdentifier,
             for: indexPath
-        ) as! FilterCell
-        
+        ) as? FilterCell else {
+            assertionFailure("Не удалось привести ячейку к FilterCell")
+            return UITableViewCell()
+        }
+
         let filter = FilterType.allCases[indexPath.row]
         // Галочка не показывается для "Все трекеры" и "Трекеры на сегодня"
         let isSelected = filter == selectedFilter && (filter != .all && filter != .today)
@@ -139,6 +146,7 @@ extension FiltersViewController: UITableViewDelegate {
 
 // MARK: - FilterCell
 class FilterCell: UITableViewCell {
+    static let reuseIdentifier = String(describing: FilterCell.self)
     private let titleLabel = UILabel()
     private let checkmarkImageView = UIImageView(image: UIImage(systemName: "checkmark"))
     private var indexPath: IndexPath?
@@ -153,7 +161,7 @@ class FilterCell: UITableViewCell {
     }
     
     private func setupUI() {
-        backgroundColor = UIColor(hex: "#E6E8EB4D")
+        backgroundColor = UIColor(named: "filterBg")
         selectionStyle = .none
         
         titleLabel.font = .systemFont(ofSize: 17)
